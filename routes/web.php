@@ -2,9 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/home', function () {
-    return view('pages.home');
-})->name('home');
+Route::view('/', 'pages.home')->name('home');
+
+Route::view('/login', 'pages.login')->name('login');
+Route::view('/register', 'pages.register')->name('register');
 
 Route::view('/dashboard', 'pages.dashboard')->name('dashboard');
 Route::view('/scan', 'pages.scan')->name('scan');

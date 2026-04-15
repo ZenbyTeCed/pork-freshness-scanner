@@ -1,0 +1,421 @@
+.porky-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.porky-main {
+    flex: 1;
+}
+
+/* =========================
+   SIMPLE AUTH HEADER
+========================= */
+.porky-auth-header-bar {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+}
+
+.porky-header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.porky-auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.porky-auth-logo-small {
+    width: 36px;
+    height: 36px;
+    background-color: var(--accent);
+    color: #ffffff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.porky-auth-nav a {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.porky-auth-nav a:hover {
+    color: var(--primary);
+}
+
+/* =========================
+   AUTH SECTION
+========================= */
+
+.porky-auth-layout-wide {
+    grid-template-columns: 1fr 560px;
+}
+
+.porky-auth-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 60px 0;
+    background: #f8f8f8;
+}
+
+.porky-auth-layout {
+    display: grid;
+    grid-template-columns: 1fr 520px;
+    gap: 80px;
+    align-items: center;
+    min-height: 70vh;
+}
+
+/* LEFT SIDE */
+.porky-auth-showcase {
+    max-width: 620px;
+}
+
+.porky-auth-branding {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.porky-auth-brand-mark {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background-color: var(--accent);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(39, 174, 96, 0.18);
+}
+
+.porky-auth-brand-title {
+    margin: 0;
+    font-size: 42px;
+    line-height: 1.1;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.porky-auth-brand-subtitle {
+    margin: 4px 0 0;
+    font-size: 18px;
+    color: var(--accent-dark);
+    font-weight: 500;
+}
+
+.porky-auth-showcase-text h2 {
+    margin: 0 0 20px;
+    font-size: 52px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #0f172a;
+    max-width: 680px;
+}
+
+.porky-auth-showcase-text p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.8;
+    color: #52637a;
+    max-width: 620px;
+}
+
+/* RIGHT SIDE */
+.porky-auth-wrapper {
+    width: 100%;
+}
+
+.porky-auth-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 32px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+.porky-auth-header {
+    text-align: left;
+    margin-bottom: 28px;
+}
+
+.porky-auth-header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.porky-auth-header p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.porky-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.porky-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.porky-form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.porky-form-group input {
+    width: 93%;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-size: 15px;
+    color: var(--text-main);
+    background-color: #f3f4f6;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.porky-register-input {
+    width: 100% !important;
+}
+
+.porky-form-group input:focus {
+    border-color: var(--accent);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.12);
+}
+
+.porky-form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.porky-auth-btn {
+    margin-top: 6px;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    background-color: #04112b;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.porky-auth-btn:hover {
+    background-color: #0b1f3a;
+    transform: translateY(-1px);
+}
+
+.porky-auth-footer-text {
+    margin: 6px 0 0;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.porky-auth-footer-text a {
+    color: var(--accent-dark);
+    font-weight: 600;
+}
+
+.porky-auth-footer-text a:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.porky-auth-footer {
+    padding: 18px 0;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    background-color: #ffffff;
+}
+
+.porky-auth-footer p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Divider */
+.porky-auth-divider {
+    text-align: center;
+    margin: 10px 0;
+    position: relative;
+}
+
+.porky-auth-divider span {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: #fff;
+    padding: 0 10px;
+}
+
+.porky-auth-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+    z-index: -1;
+}
+
+/* Google Button */
+.porky-google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background-color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.porky-google-btn:hover {
+    background-color: #f9fafb;
+}
+
+.porky-auth-wrapper {
+    width: 100%;
+    max-width: 480px;
+}
+
+.porky-auth-wrapper-wide {
+    max-width: 560px;
+}
+
+.porky-auth-card {
+    padding: 28px 24px;
+}
+
+.porky-auth-form {
+    gap: 14px;
+}
+
+.porky-form-group input {
+    padding: 12px 14px;
+    font-size: 14px;
+}
+
+.porky-auth-header {
+    margin-bottom: 20px;
+}
+
+.porky-auth-header h1 {
+    font-size: 24px;
+}
+
+.porky-auth-header p {
+    font-size: 14px;
+}
+
+.porky-auth-btn {
+    padding: 12px;
+    font-size: 14px;
+}
+
+.porky-google-btn {
+    padding: 10px;
+    font-size: 13px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 1100px) {
+    .porky-auth-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .porky-auth-showcase {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .porky-auth-branding {
+        justify-content: center;
+    }
+
+    .porky-auth-showcase-text h2,
+    .porky-auth-showcase-text p {
+        max-width: 100%;
+    }
+
+    .porky-auth-wrapper {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .porky-auth-section {
+        padding: 40px 0;
+    }
+
+    .porky-auth-brand-mark {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .porky-auth-brand-title {
+        font-size: 32px;
+    }
+
+    .porky-auth-brand-subtitle {
+        font-size: 16px;
+    }
+
+    .porky-auth-showcase-text h2 {
+        font-size: 36px;
+    }
+
+    .porky-auth-showcase-text p {
+        font-size: 16px;
+    }
+
+    .porky-auth-card {
+        padding: 28px 20px;
+        border-radius: 20px;
+    }
+
+    .porky-auth-header h1 {
+        font-size: 24px;
+    }
+}
