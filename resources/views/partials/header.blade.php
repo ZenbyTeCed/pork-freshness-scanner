@@ -13,14 +13,20 @@
             </div>
 
             <nav class="porky-nav">
-                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Home</a>
-                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                <a href="{{ route('scan') }}" class="{{ request()->routeIs('scan') ? 'active' : '' }}">Scan</a>
-                <a href="{{ route('history') }}" class="{{ request()->routeIs('history') ? 'active' : '' }}">History</a>
-                <a href="{{ route('reports') }}" class="{{ request()->routeIs('reports') ? 'active' : '' }}">Reports</a>
-                <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') ? 'active' : '' }}">Settings</a>
+                <a href="{{ route('home') }}">Home</a>
 
-                <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'active' : '' }}">Login</a>
+                <div id="authLinks" class="porky-nav-group" style="display: none;">
+                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                    <a href="{{ route('scan') }}">Scan</a>
+                    <a href="{{ route('history') }}">History</a>
+                    <a href="{{ route('reports') }}">Reports</a>
+                    <a href="{{ route('settings') }}">Settings</a>
+                    <a href="#" id="logoutBtn">Logout</a>
+                </div>
+
+                <div id="guestLinks" class="porky-nav-group">
+                    <a href="{{ route('login') }}">Login</a>
+                </div>
             </nav>
 
         </div>

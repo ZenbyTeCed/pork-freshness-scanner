@@ -354,6 +354,15 @@
     font-size: 13px;
 }
 
+#authLinks {
+    display: none;
+    gap: 10px;
+}
+
+#guestLinks {
+    display: flex;
+}
+
 /* =========================
    RESPONSIVE
 ========================= */
