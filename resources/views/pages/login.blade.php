@@ -69,3 +69,18 @@
     </div>
 </section>
 @endsection
+
+<script type="module">
+import { loginUser, loginWithGoogle } from "{{ Vite::asset('resources/js/auth.js') }}";
+
+document.getElementById("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    loginUser(email, password);
+});
+
+document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
+</script>

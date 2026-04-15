@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['public/css/general.css', 'public/css/login-register.css'])
+    @vite(['resources/js/auth.js'])
 </head>
 <body class="porky-body">
 
@@ -38,3 +39,12 @@
 
 </body>
 </html>
+
+<script>
+    window.firebaseConfig = {
+        apiKey: "{{ env('FIREBASE_API_KEY') }}",
+        authDomain: "{{ env('FIREBASE_AUTH_DOMAIN') }}",
+        projectId: "{{ env('FIREBASE_PROJECT_ID') }}",
+        appId: "{{ env('FIREBASE_APP_ID') }}"
+    };
+</script>

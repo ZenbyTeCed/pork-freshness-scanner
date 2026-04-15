@@ -74,6 +74,7 @@
 
 <script type="module">
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { registerUser, loginWithGoogle } from "{{ Vite::asset('resources/js/auth.js') }}";
 
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
@@ -91,5 +92,18 @@ document.getElementById("googleRegisterBtn").addEventListener("click", async () 
         console.error(error);
         alert("Google signup failed");
     }
+
+document.getElementById("registerForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("registerName").value;
+    const email = document.getElementById("registerEmail").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirm = document.getElementById("registerConfirmPassword").value;
+
+    registerUser(name, email, password, confirm);
+});
+
+document.getElementById("googleRegisterBtn")?.addEventListener("click", loginWithGoogle);
 });
 </script>
