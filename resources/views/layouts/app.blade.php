@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'PORKY') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @vite(['public/css/general.css'])
 
-    <!-- @vite(['resources/css/app.css', 'resources/js/app.js']) -->
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="porky-body">
 
     @include('partials.header')
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        @yield('content')
+    <main class="porky-main">
+        <div class="porky-container">
+            @yield('content')
+        </div>
     </main>
+
+    @include('partials.footer')
 
 </body>
 </html>
