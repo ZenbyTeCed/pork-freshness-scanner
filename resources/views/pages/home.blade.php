@@ -20,8 +20,23 @@
             </p>
 
             <div class="porky-hero-actions">
-                <a href="{{ route('scan') }}" class="porky-btn porky-btn-primary">Start Scanning</a>
-                <a href="{{ route('dashboard') }}" class="porky-btn porky-btn-secondary">View Dashboard</a>
+                @if (session()->has('firebase_uid'))
+                    <a href="{{ route('scan') }}" class="porky-btn porky-btn-primary">
+                        Start Scanning
+                    </a>
+
+                    <a href="{{ route('dashboard') }}" class="porky-btn porky-btn-secondary">
+                        View Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="porky-btn porky-btn-primary">
+                        Login to Start
+                    </a>
+
+                    <a href="{{ route('register') }}" class="porky-btn porky-btn-secondary">
+                        Create Account
+                    </a>
+                @endif
             </div>
         </div>
     </div>
