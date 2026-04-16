@@ -12,6 +12,7 @@
         'public/css/home.css',
         'public/css/dashboard.css',
         'public/css/scan.css',
+        'public/css/history.css',
         'resources/js/auth.js'
     ])
 </head>
