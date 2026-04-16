@@ -3,7 +3,7 @@
 @section('content')
 <section class="porky-auth-section">
     <div class="porky-container">
-        <div class="porky-auth-layout porky-auth-layout-wide"">
+        <div class="porky-auth-layout porky-auth-layout-wide">
 
             <!-- LEFT SIDE -->
             <div class="porky-auth-showcase">
@@ -73,27 +73,9 @@
 @endsection
 
 <script type="module">
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { registerUser, loginWithGoogle } from "{{ Vite::asset('resources/js/auth.js') }}";
+import { registerUser } from "{{ Vite::asset('resources/js/auth.js') }}";
 
-const auth = getAuth();
-const provider = new GoogleAuthProvider();
-
-document.getElementById("googleRegisterBtn").addEventListener("click", async () => {
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        console.log("Registered:", user);
-
-        window.location.href = "/dashboard";
-
-    } catch (error) {
-        console.error(error);
-        alert("Google signup failed");
-    }
-
-document.getElementById("registerForm").addEventListener("submit", (e) => {
+document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const name = document.getElementById("registerName").value;
@@ -101,9 +83,23 @@ document.getElementById("registerForm").addEventListener("submit", (e) => {
     const password = document.getElementById("registerPassword").value;
     const confirm = document.getElementById("registerConfirmPassword").value;
 
-    registerUser(name, email, password, confirm);
-});
+    const user = await registerUser(name, email, password, confirm);
+    if (!user) return;
 
-document.getElementById("googleRegisterBtn")?.addEventListener("click", loginWithGoogle);
+    const res = await fetch("/auth/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName
+        })
+    });
+
+    const data = await res.json();
+    if (data.success) window.location.href = data.redirect;
 });
 </script>

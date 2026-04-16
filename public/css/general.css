@@ -2,6 +2,11 @@ body {
     font-family: 'Inter', sans-serif;
     padding: 0;
     margin: 0;
+    letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
 }
 
 a {
@@ -36,6 +41,30 @@ a {
 .porky-header {
     background-color: #ffffff;
     border-bottom: 1px solid var(--border);
+}
+
+.porky-nav-hidden {
+    display: none;
+}
+
+.porky-nav-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.porky-logout-form {
+    margin: 0;
+}
+
+.porky-logout-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
 }
 
 /* CONTAINER */

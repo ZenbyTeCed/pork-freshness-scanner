@@ -13,29 +13,35 @@ const firebaseConfig = window.firebaseConfig;
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
+export const loginUser = async (email, password) => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+        return null;
+    }
+};
+
 export const registerUser = async (name, email, password, confirmPassword) => {
     if (password !== confirmPassword) {
         alert("Passwords do not match");
-        return;
+        return null;
     }
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: name });
-        window.location.href = "/dashboard";
-    } catch (error) {
-        console.error(error);
-        alert(error.message);
-    }
-};
 
-export const loginUser = async (email, password) => {
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = "/dashboard";
+        await updateProfile(userCredential.user, {
+            displayName: name
+        });
+
+        return userCredential.user;
     } catch (error) {
         console.error(error);
         alert(error.message);
+        return null;
     }
 };
 
@@ -43,10 +49,11 @@ export const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
 
     try {
-        await signInWithPopup(auth, provider);
-        window.location.href = "/dashboard";
+        const result = await signInWithPopup(auth, provider);
+        return result.user;
     } catch (error) {
         console.error(error);
         alert(error.message);
+        return null;
     }
 };

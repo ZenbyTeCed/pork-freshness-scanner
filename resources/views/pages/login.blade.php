@@ -73,14 +73,50 @@
 <script type="module">
 import { loginUser, loginWithGoogle } from "{{ Vite::asset('resources/js/auth.js') }}";
 
-document.getElementById("loginForm").addEventListener("submit", (e) => {
+document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    loginUser(email, password);
+    const user = await loginUser(email, password);
+    if (!user) return;
+
+    const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName
+        })
+    });
+
+    const data = await res.json();
+    if (data.success) window.location.href = data.redirect;
 });
 
-document.getElementById("googleLoginBtn")?.addEventListener("click", loginWithGoogle);
+document.getElementById("googleLoginBtn")?.addEventListener("click", async () => {
+    const user = await loginWithGoogle();
+    if (!user) return;
+
+    const res = await fetch("/auth/google", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName
+        })
+    });
+
+    const data = await res.json();
+    if (data.success) window.location.href = data.redirect;
+});
 </script>

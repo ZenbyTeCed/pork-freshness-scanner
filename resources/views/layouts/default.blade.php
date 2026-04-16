@@ -34,31 +34,54 @@
         </div>
     </footer>
 
-    <script type="module">
-        import { auth } from "{{ Vite::asset('resources/js/auth.js') }}";
-        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<script type="module">
+import { auth } from "{{ Vite::asset('resources/js/auth.js') }}";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const authLinks = document.getElementById("authLinks");
-        const guestLinks = document.getElementById("guestLinks");
-        const logoutBtn = document.getElementById("logoutBtn");
+const authLinks = document.getElementById("authLinks");
+const guestLinks = document.getElementById("guestLinks");
+const logoutBtn = document.getElementById("logoutBtn");
 
-        onAuthStateChanged(auth, (user) => {
-            if (!authLinks || !guestLinks) return;
+onAuthStateChanged(auth, (user) => {
+    if (!authLinks || !guestLinks) return;
 
-            if (user) {
-                authLinks.style.display = "flex";
-                guestLinks.style.display = "none";
-            } else {
-                authLinks.style.display = "none";
-                guestLinks.style.display = "flex";
-            }
+    if (user) {
+        authLinks.style.display = "flex";
+        guestLinks.style.display = "none";
+    } else {
+        authLinks.style.display = "none";
+        guestLinks.style.display = "flex";
+    }
+});
+
+logoutBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Firebase signOut failed:", error);
+    }
+
+    try {
+        const response = await fetch("{{ route('logout') }}", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "X-Requested-With": "XMLHttpRequest",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
         });
 
-        logoutBtn?.addEventListener("click", async (e) => {
-            e.preventDefault();
-            await signOut(auth);
-            window.location.href = "/";
-        });
-    </script>
+        window.location.href = "{{ route('login') }}";
+    } catch (error) {
+        console.error("Laravel logout failed:", error);
+        window.location.href = "{{ route('login') }}";
+    }
+});
+</script>
 </body>
 </html>

@@ -10,6 +10,7 @@
     @vite([
         'public/css/general.css',
         'public/css/home.css',
+        'public/css/dashboard.css',
         'resources/js/auth.js'
     ])
 </head>
