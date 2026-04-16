@@ -133,6 +133,27 @@
     align-items: center;
     justify-content: space-between;
     gap: 18px;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.history-item-card:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.history-item-card:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+.history-item-left,
+.history-item-content,
+.scan-id,
+.confidence-text,
+.history-date,
+.history-meta {
+    color: inherit;
 }
 
 .history-item-left {

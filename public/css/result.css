@@ -1,0 +1,393 @@
+.result-page {
+    padding: 36px 20px 48px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.result-container {
+    max-width: 1060px;
+    margin: 0 auto;
+}
+
+.result-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #475569;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.result-back-link svg {
+    width: 18px;
+    height: 18px;
+}
+
+.result-header {
+    margin-bottom: 20px;
+}
+
+.result-header h1 {
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 0.8fr;
+    gap: 22px;
+    align-items: start;
+}
+
+.result-left,
+.result-right {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.result-card {
+    background: #ffffff;
+    border: 1px solid #dbe3ee;
+    border-radius: 18px;
+    padding: 22px;
+}
+
+.result-card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 18px;
+    letter-spacing: -0.02em;
+}
+
+.result-image-wrap {
+    width: 100%;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.result-image-wrap img {
+    width: 100%;
+    height: 360px;
+    object-fit: cover;
+    display: block;
+}
+
+.section-title.with-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.section-title.with-icon h2 {
+    margin-bottom: 0;
+}
+
+.section-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.green-soft {
+    background: #dcfce7;
+    color: #059669;
+}
+
+.purple-soft {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+.insight-text {
+    font-size: 14px;
+    line-height: 1.9;
+    color: #334155;
+    margin-bottom: 22px;
+}
+
+.detected-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 16px;
+}
+
+.indicator-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.indicator-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 12px;
+    border-radius: 14px;
+    background: #f8fafc;
+}
+
+.indicator-item div p {
+    margin: 0;
+}
+
+.indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.indicator-dot.blue {
+    background: #3b82f6;
+}
+
+.indicator-dot.purple {
+    background: #a855f7;
+}
+
+.indicator-dot.green {
+    background: #10b981;
+}
+
+.indicator-item h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.indicator-item p {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.recommendation-card {
+    background: #ecfdf5;
+    border-color: #86efac;
+}
+
+.recommendation-card h2 {
+    font-size: 15px;
+    color: #059669;
+    margin-bottom: 12px;
+}
+
+.recommendation-card p {
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.8;
+}
+
+.grade-card {
+    text-align: center;
+    padding-top: 22px;
+    padding-bottom: 22px;
+}
+
+.grade-icon-box {
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    margin: 0 auto 18px;
+    background: #10b981;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grade-icon-box svg {
+    width: 36px;
+    height: 36px;
+}
+
+.grade-card h2 {
+    font-size: 34px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.grade-subtitle {
+    font-size: 14px;
+    color: #059669;
+    margin-bottom: 22px;
+}
+
+.grade-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin-bottom: 18px;
+}
+
+.grade-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #475569;
+}
+
+.confidence-title {
+    margin-bottom: 18px;
+}
+
+.confidence-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.confidence-value {
+    font-size: 28px;
+    font-weight: 500;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.confidence-label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.confidence-bar {
+    width: 100%;
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: #10b981;
+    border-radius: 999px;
+}
+
+.confidence-note {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.details-card h2 {
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.detail-item div p,
+.detail-item div h3 {
+    margin: 0;
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-icon {
+    color: #94a3b8;
+    margin-top: 1px;
+}
+
+.detail-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.detail-item h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.detail-item p {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.result-action-btn {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.result-action-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.primary-btn {
+    background: #0ea56b;
+    color: #ffffff;
+}
+
+.primary-btn:hover {
+    background: #0c955f;
+}
+
+.secondary-btn {
+    background: #ffffff;
+    border-color: #dbe3ee;
+    color: #0f172a;
+}
+
+.secondary-btn:hover {
+    background: #f8fafc;
+}
+
+@media (max-width: 992px) {
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .result-page {
+        padding: 24px 16px 40px;
+    }
+
+    .result-image-wrap img {
+        height: 260px;
+    }
+
+    .grade-card h2 {
+        font-size: 30px;
+    }
+}

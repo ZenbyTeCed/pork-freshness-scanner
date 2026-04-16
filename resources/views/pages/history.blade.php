@@ -119,7 +119,7 @@
 
         <div class="history-list">
             @foreach ($historyItems as $item)
-                <div class="history-item-card">
+                <a href="{{ route('result', ['id' => $item['id']]) }}" class="history-item-card">
                     <div class="history-item-left">
                         <img src="{{ $item['image'] }}" alt="{{ $item['id'] }}">
 
@@ -140,12 +140,12 @@
                         </div>
                     </div>
 
-                    <button type="button" class="history-arrow-btn" aria-label="View scan details">
+                    <span class="history-arrow-btn" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
                         </svg>
-                    </button>
-                </div>
+                    </span>
+                </a>
             @endforeach
         </div>
     </div>

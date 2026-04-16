@@ -21,6 +21,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::view('/history', 'pages.history')->name('history');
     Route::view('/reports', 'pages.reports')->name('reports');
     Route::view('/settings', 'pages.settings')->name('settings');
+    Route::view('/result', 'pages.result')->name('result');
 });
 
 Route::get('/session-check', function () {
