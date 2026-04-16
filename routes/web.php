@@ -7,8 +7,10 @@ Route::get('/', function () {
     return view('pages.home');
 })->name('home');
 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::middleware('firebase.guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+});
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);

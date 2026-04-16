@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function ($middleware) {
         $middleware->alias([
             'firebase.auth' => \App\Http\Middleware\FirebaseAuth::class,
+            'firebase.guest' => \App\Http\Middleware\FirebaseGuest::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
