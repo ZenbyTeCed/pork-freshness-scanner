@@ -131,9 +131,10 @@
             </div>
 
             @foreach ($activities as $activity)
-                <div class="activity-row">
+                <a href="{{ route('result') }}" class="activity-row">
                     <div class="activity-left">
                         <img src="https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=100&q=80" alt="Pork image">
+                        
                         <div class="activity-info">
                             <div class="activity-top">
                                 <span class="grade-tag {{ $activity['class'] }}">{{ $activity['grade'] }}</span>
@@ -142,8 +143,9 @@
                             <p>{{ $activity['time'] }}</p>
                         </div>
                     </div>
+
                     <div class="activity-arrow">→</div>
-                </div>
+                </a>
             @endforeach
         </div>
     </div>

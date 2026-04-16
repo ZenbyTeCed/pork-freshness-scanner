@@ -22,8 +22,6 @@
 
                     <a href="{{ route('history') }}" class="{{ request()->routeIs('history') ? 'active' : '' }}">History</a>
 
-                    <a href="{{ route('reports') }}" class="{{ request()->routeIs('reports') ? 'active' : '' }}">Reports</a>
-
                     <a href="{{ route('settings') }}" class="{{ request()->routeIs('settings') ? 'active' : '' }}">Settings</a>
 
                     <form id="logoutForm" action="{{ route('logout') }}" method="POST" class="porky-logout-form">

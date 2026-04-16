@@ -14,6 +14,7 @@
         'public/css/scan.css',
         'public/css/history.css',
         'public/css/result.css',
+        'public/css/settings.css',
         'resources/js/auth.js'
     ])
 </head>

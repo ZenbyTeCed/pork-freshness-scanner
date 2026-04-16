@@ -1,0 +1,402 @@
+.settings-page {
+    padding: 40px 20px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.settings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.settings-header {
+    margin-bottom: 28px;
+}
+
+.settings-header h1 {
+    font-size: 36px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.settings-header p {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 276px 1fr;
+    gap: 22px;
+    align-items: start;
+}
+
+.settings-sidebar {
+    background: #ffffff;
+    border: 1px solid #dbe3ee;
+    border-radius: 18px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-link {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: 0.2s ease;
+}
+
+.settings-link svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.settings-link:hover {
+    background: #f8fafc;
+}
+
+.settings-link.active {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.settings-section {
+    display: none;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.settings-section.active {
+    display: flex;
+}
+
+.settings-card {
+    background: #ffffff;
+    border: 1px solid #dbe3ee;
+    border-radius: 18px;
+    padding: 24px;
+}
+
+.settings-card h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 22px;
+    letter-spacing: -0.02em;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.profile-grid {
+    grid-template-columns: 1fr;
+}
+
+input[readonly] {
+    background: #f8fafc;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    width: 100%;
+}
+
+.form-group input,
+.form-group select,
+.input-icon {
+    width: 100%;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 46px;
+    border: 1px solid #dbe3ee;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #0f172a;
+    font-family: inherit;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #10b981;
+}
+
+.input-icon {
+    position: relative;
+    width: 100%;
+    display: flex;
+}
+
+.input-icon svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+}
+
+.input-icon input {
+    width: 100%;
+    padding-left: 42px;
+}
+
+.input-icon {
+    position: relative;
+    width: 100%;
+    display: flex;
+}
+
+.input-icon input {
+    width: 100%;
+}
+
+#fullName,
+#newPassword,
+#confirmPassword,
+#deviceIp{
+    width: 96.5%;
+}
+
+.device-status {
+    border: 1px solid #86efac;
+    background: #ecfdf5;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.status-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #10b981;
+    flex-shrink: 0;
+}
+
+.device-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.device-ip {
+    font-size: 13px;
+    color: #475569;
+}
+
+.status-badge {
+    font-size: 12px;
+    font-weight: 500;
+    color: #059669;
+    background: #d1fae5;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.toggle-group {
+    margin-top: 18px;
+    border-radius: 16px;
+    background: #f8fafc;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.toggle-group h4 {
+    font-size: 15px;
+    font-weight: 500;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.toggle-group p {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: #cbd5e1;
+    border-radius: 999px;
+    transition: 0.2s ease;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: 0.2s ease;
+}
+
+.switch input:checked + .slider {
+    background: #10b981;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(18px);
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save-btn {
+    min-width: 168px;
+    height: 46px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 14px;
+    background: #0ea56b;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.save-btn:hover {
+    background: #0c955f;
+}
+
+.save-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 992px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .settings-link {
+        flex: 1 1 220px;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-page {
+        padding: 24px 16px;
+    }
+
+    .settings-header h1 {
+        font-size: 30px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .toggle-group {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .settings-actions {
+        justify-content: stretch;
+    }
+
+    .save-btn {
+        width: 100%;
+    }
+}
