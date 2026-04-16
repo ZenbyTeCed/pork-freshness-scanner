@@ -88,23 +88,21 @@ a {
 .porky-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
 }
 
 /* LOGO */
 .porky-logo {
-    width: 40px;
-    height: 40px;
-    background-color: var(--accent);
-    border-radius: 12px;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .porky-logo img {
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
 }
 
 /* TITLE */

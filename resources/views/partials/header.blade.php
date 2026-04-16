@@ -4,7 +4,7 @@
 
             <div class="porky-brand">
                 <div class="porky-logo">
-                    <img src="{{ asset('images/logo.png') }}" alt="PORKY Logo">
+                    <img src="{{ asset('images/Porky Logo.png') }}" alt="PORKY Logo">
                 </div>
                 <div class="porky-title">
                     <h1>PORKY</h1>
