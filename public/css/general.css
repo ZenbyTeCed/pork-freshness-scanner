@@ -13,6 +13,10 @@ a {
     text-decoration: none;
 }
 
+main {
+    margin-bottom: 40px;
+}
+
 /* =========================
    COLOR SYSTEM
 ========================= */
@@ -74,6 +78,7 @@ a {
     padding: 8px 12px;
     border-radius: 10px;
     text-decoration: none;
+    cursor: pointer;
     color: #334155;
     font-size: 14px;
     transition: 0.2s ease;
@@ -185,7 +190,6 @@ a {
     background-color: #0B1F3A;
     padding: 28px 0;
     height: 90px;
-    margin-top: 40px;
 }
 
 .porky-footer-container {
