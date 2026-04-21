@@ -113,6 +113,11 @@
     background: #f8fafc;
 }
 
+.export-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 .export-btn svg {
     width: 18px;
     height: 18px;
@@ -135,6 +140,10 @@
     gap: 18px;
     text-decoration: none;
     transition: 0.2s ease;
+}
+
+.history-item-card.is-hidden {
+    display: none;
 }
 
 .history-item-card:hover {
@@ -259,6 +268,26 @@
 .history-arrow-btn svg {
     width: 20px;
     height: 20px;
+}
+
+.history-empty-state {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    padding: 34px 20px;
+    text-align: center;
+}
+
+.history-empty-state h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.history-empty-state p {
+    font-size: 14px;
+    color: #64748b;
 }
 
 @media (max-width: 992px) {
