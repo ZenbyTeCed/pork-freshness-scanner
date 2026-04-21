@@ -109,6 +109,13 @@
     letter-spacing: -0.02em;
 }
 
+.settings-note {
+    margin: -12px 0 20px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -125,6 +132,12 @@
 input[readonly] {
     background: #f8fafc;
     color: #64748b;
+    cursor: not-allowed;
+}
+
+input:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
     cursor: not-allowed;
 }
 
@@ -331,6 +344,21 @@ input[readonly] {
     justify-content: flex-end;
 }
 
+.settings-message {
+    min-height: 22px;
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.settings-message.success {
+    color: #047857;
+}
+
+.settings-message.error {
+    color: #dc2626;
+}
+
 .save-btn {
     min-width: 168px;
     height: 46px;
@@ -352,6 +380,11 @@ input[readonly] {
 
 .save-btn:hover {
     background: #0c955f;
+}
+
+.save-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 .save-btn svg {

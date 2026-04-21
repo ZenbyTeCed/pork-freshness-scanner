@@ -76,6 +76,32 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateSession(Request $request)
+    {
+        $request->validate([
+            'uid' => 'required|string',
+            'email' => 'nullable|email',
+            'name' => 'nullable|string|max:255',
+        ]);
+
+        if ($request->uid !== session('firebase_uid')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authenticated user does not match the active session.',
+            ], 403);
+        }
+
+        session([
+            'firebase_uid' => $request->uid,
+            'firebase_email' => $request->email,
+            'firebase_name' => $request->name,
+        ]);
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
     public function logout(Request $request)
     {
 

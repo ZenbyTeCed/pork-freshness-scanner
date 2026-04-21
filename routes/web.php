@@ -22,6 +22,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::view('/scan', 'pages.scan')->name('scan');
     Route::view('/history', 'pages.history')->name('history');
     Route::view('/settings', 'pages.settings')->name('settings');
+    Route::post('/auth/session', [AuthController::class, 'updateSession'])->name('auth.session.update');
     Route::view('/result', 'pages.result')->name('result');
 });
 
