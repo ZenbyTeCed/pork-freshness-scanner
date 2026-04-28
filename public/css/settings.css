@@ -35,6 +35,12 @@
     align-items: start;
 }
 
+#profileSettingsForm {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
 .settings-sidebar {
     background: #ffffff;
     border: 1px solid #dbe3ee;
