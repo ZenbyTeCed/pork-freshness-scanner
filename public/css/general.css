@@ -301,10 +301,6 @@ a {
     .porky-main {
         padding-bottom: 110px;
     }
-
-    .porky-footer {
-        margin-bottom: 98px;
-    }
 }
 
 @media (max-width: 768px) {
