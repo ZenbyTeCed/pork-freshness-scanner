@@ -87,6 +87,37 @@
             window.location.href = "{{ route('login') }}";
         }
     });
+
+    const porkyNav = document.querySelector('.porky-nav');
+
+    if (porkyNav && window.matchMedia('(max-width: 1024px)').matches) {
+        let lastScrollY = window.scrollY;
+        let ticking = false;
+
+        porkyNav.classList.add('porky-nav-scrollable');
+
+        const updateMobileNavVisibility = () => {
+            const currentScrollY = window.scrollY;
+            const scrollingDown = currentScrollY > lastScrollY;
+            const passedThreshold = currentScrollY > 80;
+
+            if (scrollingDown && passedThreshold) {
+                porkyNav.classList.add('porky-nav-hidden-on-scroll');
+            } else {
+                porkyNav.classList.remove('porky-nav-hidden-on-scroll');
+            }
+
+            lastScrollY = currentScrollY;
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(updateMobileNavVisibility);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
 </script>
 
 </body>

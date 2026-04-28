@@ -5,7 +5,7 @@
 }
 
 .result-container {
-    max-width: 1060px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
@@ -55,6 +55,7 @@
     border: 1px solid #dbe3ee;
     border-radius: 18px;
     padding: 22px;
+    overflow: hidden;
 }
 
 .result-card h2 {
@@ -373,6 +374,10 @@
 }
 
 @media (max-width: 992px) {
+    .result-page {
+        padding: 30px 18px 42px;
+    }
+
     .result-grid {
         grid-template-columns: 1fr;
     }
@@ -389,5 +394,75 @@
 
     .grade-card h2 {
         font-size: 30px;
+    }
+
+    .result-card {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .section-title.with-icon {
+        align-items: flex-start;
+    }
+
+    .confidence-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .detail-item {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .result-back-link,
+    .insight-text,
+    .indicator-item p,
+    .recommendation-card p,
+    .detail-item p,
+    .confidence-note {
+        font-size: 13px;
+    }
+
+    .result-header h1 {
+        font-size: 24px;
+    }
+
+    .result-card h2 {
+        font-size: 15px;
+        margin-bottom: 14px;
+    }
+
+    .result-image-wrap img {
+        height: 220px;
+    }
+
+    .grade-icon-box {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 14px;
+    }
+
+    .grade-icon-box svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .grade-card h2 {
+        font-size: 26px;
+    }
+
+    .confidence-value {
+        font-size: 24px;
+    }
+
+    .indicator-item {
+        align-items: flex-start;
+        padding: 12px 10px;
+    }
+
+    .result-action-btn {
+        min-height: 44px;
     }
 }

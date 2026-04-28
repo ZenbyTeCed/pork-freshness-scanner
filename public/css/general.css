@@ -3,6 +3,11 @@ body {
     padding: 0;
     margin: 0;
     letter-spacing: -0.01em;
+    overflow-x: hidden;
+}
+
+.porky-body {
+    min-height: 100vh;
 }
 
 h1, h2, h3, h4 {
@@ -85,6 +90,10 @@ a {
     height: 18px;
 }
 
+.nav-link-label {
+    white-space: nowrap;
+}
+
 .nav-link:hover {
     background: #f1f5f9;
 }
@@ -106,7 +115,8 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 70px;
+    height: 52px;
+    gap: 12px;
 }
 
 /* =========================
@@ -115,35 +125,37 @@ a {
 .porky-brand {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 /* LOGO */
 .porky-logo {
-    width: 50px;
-    height: 50px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .porky-logo img {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
 }
 
 /* TITLE */
 .porky-title h1 {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     margin: 0;
     color: var(--primary);
 }
 
 .porky-title p {
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text-muted);
     margin: 0;
+    line-height: 1.2;
 }
 
 /* =========================
@@ -152,6 +164,19 @@ a {
 .porky-nav {
     display: flex;
     gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.porky-nav-scrollable {
+    transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.porky-nav-hidden-on-scroll {
+    transform: translateY(calc(100% + 20px));
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* NAV LINKS */
@@ -200,4 +225,164 @@ a {
     color: var(--footer-text);
     font-size: 14px;
     font-weight: 400;
+}
+
+@media (max-width: 1024px) {
+    .porky-header-inner {
+        height: auto;
+        min-height: 52px;
+        padding: 8px 0;
+        align-items: center;
+    }
+
+    .porky-nav {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 1000;
+        width: auto;
+        justify-content: center;
+        padding: 10px;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(219, 227, 238, 0.95);
+        border-radius: 22px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        flex-wrap: nowrap;
+    }
+
+    .porky-nav > .nav-link,
+    .porky-nav-group {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .porky-nav-group {
+        width: auto;
+        justify-content: center;
+        flex-wrap: nowrap;
+    }
+
+    .porky-nav > .nav-link,
+    .porky-nav-group .nav-link {
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        padding: 0;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        flex: 0 0 56px;
+    }
+
+    .porky-nav .nav-link-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .porky-nav .nav-link svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .porky-main {
+        padding-bottom: 110px;
+    }
+
+    .porky-footer {
+        margin-bottom: 98px;
+    }
+}
+
+@media (max-width: 768px) {
+    
+    .porky-container,
+    .porky-footer-container {
+        padding: 0 16px;
+    }
+
+    .porky-header-inner {
+        justify-content: flex-start;
+        gap: 0;
+    }
+
+    .porky-brand {
+        gap: 10px;
+    }
+
+    .porky-logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .porky-logo img {
+        width: 26px;
+        height: 26px;
+    }
+
+    .porky-title h1 {
+        font-size: 15px;
+    }
+
+    .porky-title p {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .porky-header-inner {
+        padding: 6px 0;
+    }
+
+    .porky-title h1 {
+        font-size: 14px;
+    }
+
+    .porky-nav {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .porky-nav > .nav-link,
+    .porky-nav-group {
+        gap: 8px;
+    }
+
+    .porky-nav > .nav-link,
+    .porky-nav-group .nav-link {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        border-radius: 16px;
+        flex: 0 0 48px;
+    }
+
+    .porky-nav .nav-link svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .porky-main {
+        padding-bottom: 96px;
+    }
+
+    .porky-footer p {
+        font-size: 13px;
+    }
 }

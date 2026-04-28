@@ -5,12 +5,13 @@
 }
 
 .scan-container {
-    max-width: 960px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
 .scan-header {
     margin-bottom: 30px;
+    max-width: 720px;
 }
 
 .scan-header h1 {
@@ -47,6 +48,7 @@
     border: 1px solid #dbe3ee;
     border-radius: 18px;
     padding: 24px;
+    overflow: hidden;
 }
 
 .scan-card h2 {
@@ -311,8 +313,23 @@
 }
 
 @media (max-width: 900px) {
+    .scan-page {
+        padding: 32px 18px;
+    }
+
+    .scan-header {
+        margin-bottom: 24px;
+    }
+
     .scan-grid {
         grid-template-columns: 1fr;
+    }
+
+    .preview-box,
+    .preview-placeholder,
+    .preview-image {
+        min-height: 280px;
+        height: 280px;
     }
 }
 
@@ -325,15 +342,69 @@
         font-size: 30px;
     }
 
+    .scan-header p,
+    .guidelines-card li,
+    .analysis-card li,
+    .analysis-card p {
+        font-size: 13px;
+    }
+
     .capture-methods {
         grid-template-columns: 1fr;
     }
 
     .scan-card {
         padding: 18px;
+        border-radius: 16px;
     }
 
     .upload-dropzone {
         min-height: 220px;
+        padding: 20px 16px;
+    }
+
+    .upload-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 14px;
+    }
+
+    .upload-icon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .preview-box,
+    .preview-placeholder,
+    .preview-image {
+        min-height: 220px;
+        height: 220px;
+    }
+
+    .preview-header {
+        margin-bottom: 14px;
+    }
+
+    .submit-scan-btn,
+    .capture-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .scan-header h1 {
+        font-size: 26px;
+    }
+
+    .scan-card h2 {
+        font-size: 16px;
+    }
+
+    .capture-btn {
+        min-height: 76px;
+    }
+
+    .upload-dropzone h3 {
+        font-size: 14px;
     }
 }
