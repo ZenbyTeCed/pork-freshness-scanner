@@ -20,7 +20,7 @@
                     <h2>Sample Image</h2>
 
                     <div class="result-image-wrap">
-                        <img src="https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=1200&q=80" alt="Pork sample">
+                        <img id="resultImage" src="" alt="Pork sample">
                     </div>
                 </div>
 
@@ -87,8 +87,8 @@
                         </svg>
                     </div>
 
-                    <h2>Grade A</h2>
-                    <p class="grade-subtitle">Excellent Freshness</p>
+                    <h2 id="gradeDisplay">Grade A</h2>
+                    <p class="grade-subtitle" id="gradeSubtitle">Excellent Freshness</p>
 
                     <div class="grade-divider"></div>
 
@@ -109,12 +109,12 @@
                     </div>
 
                     <div class="confidence-row">
-                        <span class="confidence-value">96.5%</span>
+                        <span class="confidence-value" id="confidenceValue">96.5%</span>
                         <span class="confidence-label">Accuracy</span>
                     </div>
 
                     <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: 96.5%;"></div>
+                        <div class="confidence-fill" id="confidenceFill" style="width: 96.5%;"></div>
                     </div>
 
                     <p class="confidence-note">
@@ -133,7 +133,7 @@
                         </div>
                         <div>
                             <h3>Timestamp</h3>
-                            <p>April 15, 2026 at 10:30 AM</p>
+                            <p id="scanTimestamp">April 15, 2026 at 10:30 AM</p>
                         </div>
                     </div>
 
@@ -145,7 +145,7 @@
                         </div>
                         <div>
                             <h3>Scan ID</h3>
-                            <p>SCAN-000001</p>
+                            <p id="scanIdDisplay">SCAN-000001</p>
                         </div>
                     </div>
                 </div>
@@ -164,4 +164,74 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const scanId = urlParams.get('scan_id');
+
+        if (!scanId) {
+            alert('No scan ID provided');
+            window.location.href = '/scan';
+            return;
+        }
+
+        try {
+            const response = await axios.get(`/api/scans/${scanId}`);
+            const data = response.data;
+
+            // Populate image
+            document.getElementById('resultImage').src = `/storage/${data.scan.image_path}`;
+
+            // Populate grade
+            const grade = data.result.grade;
+            document.getElementById('gradeDisplay').textContent = `Grade ${grade}`;
+            document.getElementById('gradeSubtitle').textContent = getGradeSubtitle(grade);
+
+            // Populate confidence
+            const confidence = data.result.confidence * 100;
+            document.getElementById('confidenceValue').textContent = `${confidence.toFixed(1)}%`;
+            document.getElementById('confidenceFill').style.width = `${confidence}%`;
+
+            // Populate details
+            document.getElementById('scanIdDisplay').textContent = scanId;
+            document.getElementById('scanTimestamp').textContent = new Date(data.scan.created_at).toLocaleString();
+
+            // Populate indicators
+            const indicators = document.querySelectorAll('.indicator-item');
+            const details = data.result.details;
+            if (indicators.length >= 3) {
+                indicators[0].querySelector('p').textContent = details.color || 'N/A';
+                indicators[1].querySelector('p').textContent = details.surface || 'N/A';
+                indicators[2].querySelector('p').textContent = details.texture || 'N/A';
+            }
+
+            // Populate recommendation
+            const recommendationCard = document.querySelector('.recommendation-card p');
+            recommendationCard.textContent = getRecommendation(grade);
+
+        } catch (error) {
+            console.error('Error loading scan result:', error);
+            alert('Error loading scan result');
+        }
+    });
+
+    function getGradeSubtitle(grade) {
+        const subtitles = {
+            'A': 'Excellent Freshness',
+            'B': 'Good Freshness',
+            'C': 'Fair Freshness'
+        };
+        return subtitles[grade] || 'Unknown';
+    }
+
+    function getRecommendation(grade) {
+        const recommendations = {
+            'A': 'Excellent quality. Safe for immediate consumption or storage. Recommended for all cooking methods.',
+            'B': 'Good quality. Suitable for consumption with proper cooking. Store refrigerated.',
+            'C': 'Fair quality. Use soon or consider alternative options. Ensure thorough cooking.'
+        };
+        return recommendations[grade] || 'Quality assessment available. Consult guidelines.';
+    }
+</script>
 @endsection

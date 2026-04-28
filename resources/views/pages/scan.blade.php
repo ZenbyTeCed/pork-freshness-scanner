@@ -96,6 +96,13 @@
                     <p class="analysis-note">
                         Results are provided in seconds with a confidence score and detailed recommendations.
                     </p>
+
+                    <button type="button" class="submit-scan-btn" id="submitScanBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        <span>Analyze Image</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -205,6 +212,46 @@
     if (removePreviewBtn) {
         removePreviewBtn.addEventListener('click', function () {
             resetPreview();
+        });
+    }
+
+    // Submit scan logic
+    const submitScanBtn = document.getElementById('submitScanBtn');
+
+    if (submitScanBtn) {
+        submitScanBtn.addEventListener('click', async function () {
+            if (!scanImageInput.files[0]) {
+                alert('Please select an image first.');
+                return;
+            }
+
+            // Show loading state
+            submitScanBtn.disabled = true;
+            submitScanBtn.innerHTML = '<span>Analyzing...</span>';
+
+            const formData = new FormData();
+            formData.append('image', scanImageInput.files[0]);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            try {
+                const response = await axios.post('/api/scan', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                // Redirect to result page with scan_id
+                window.location.href = `/result?scan_id=${response.data.scan_id}`;
+            } catch (error) {
+                alert('Error submitting scan: ' + (error.response?.data?.message || 'Unknown error'));
+                submitScanBtn.disabled = false;
+                submitScanBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    <span>Analyze Image</span>
+                `;
+            }
         });
     }
 
