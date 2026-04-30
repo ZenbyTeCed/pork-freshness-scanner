@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Kreait\Firebase\Factory;
-use Kreait\Firebase\Database;
 
 class ScanController extends Controller
 {
@@ -32,8 +31,12 @@ class ScanController extends Controller
         // Placeholder for Edge Impulse integration
         // Here you would send the image to Edge Impulse API and get results
         // For now, mock results
+        $classification = 'fresh';
+        $grade = $this->gradeFromClassification($classification);
+
         $mlResult = [
-            'grade' => 'A',
+            'classification' => $classification,
+            'grade' => $grade,
             'confidence' => 0.95,
             'details' => [
                 'color' => 'Fresh',
@@ -46,6 +49,10 @@ class ScanController extends Controller
         $scanRef = $this->database->getReference('scans')->push([
             'user_id' => $user->id,
             'image_path' => $imagePath,
+            'image_url' => asset('storage/' . $imagePath),
+            'classification' => $mlResult['classification'],
+            'grade' => $mlResult['grade'],
+            'confidence' => $mlResult['confidence'],
             'created_at' => now()->toISOString(),
         ]);
 
@@ -53,6 +60,7 @@ class ScanController extends Controller
 
         // Store result in Firebase
         $this->database->getReference('results/' . $scanId)->set([
+            'classification' => $mlResult['classification'],
             'grade' => $mlResult['grade'],
             'confidence' => $mlResult['confidence'],
             'details' => $mlResult['details'],
@@ -63,6 +71,15 @@ class ScanController extends Controller
             'scan_id' => $scanId,
             'result' => $mlResult,
         ]);
+    }
+
+    private function gradeFromClassification(string $classification): string
+    {
+        return match ($classification) {
+            'fresh' => 'A',
+            'half_fresh' => 'B',
+            'spoiled' => 'C',
+        };
     }
 
     public function index(Request $request)

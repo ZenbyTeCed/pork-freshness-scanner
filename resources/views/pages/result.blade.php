@@ -92,7 +92,7 @@
 
                     <div class="grade-divider"></div>
 
-                    <p class="grade-description">
+                    <p class="grade-description" id="classificationDescription">
                         Premium quality pork with optimal freshness indicators
                     </p>
                 </div>
@@ -134,6 +134,18 @@
                         <div>
                             <h3>Timestamp</h3>
                             <p id="scanTimestamp">April 15, 2026 at 10:30 AM</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M4.5 6.75h.008v.008H4.5V6.75Zm0 5.25h.008v.008H4.5V12Zm0 5.25h.008v.008H4.5v-.008Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Classification</h3>
+                            <p id="classificationLabel">N/A</p>
                         </div>
                     </div>
 
@@ -206,10 +218,13 @@
             // Populate image
             document.getElementById('resultImage').src = data.image_url || placeholderImage;
 
-            // Populate grade
-            const grade = data.grade;
+            // Populate classification and grade
+            const classification = data.classification;
+            const grade = data.grade || getGradeFromClassification(classification);
             document.getElementById('gradeDisplay').textContent = `Grade ${grade}`;
             document.getElementById('gradeSubtitle').textContent = getGradeSubtitle(grade);
+            document.getElementById('classificationLabel').textContent = formatClassification(classification);
+            document.getElementById('classificationDescription').textContent = getClassificationDescription(classification, grade);
 
             // Populate confidence
             const confidence = normalizeConfidence(data.confidence);
@@ -217,17 +232,18 @@
             document.getElementById('confidenceFill').style.width = `${confidence}%`;
 
             // Populate details
+            const temperatureUnit = `${String.fromCharCode(176)}C`;
             document.getElementById('scanTimestamp').textContent = formatTimestamp(data.created_at);
             document.getElementById('mq135Value').textContent = formatValue(data.mq135);
-            document.getElementById('temperatureValue').textContent = formatValue(data.temperature, '°C');
+            document.getElementById('temperatureValue').textContent = formatValue(data.temperature, temperatureUnit);
             document.getElementById('humidityValue').textContent = formatValue(data.humidity, '%');
 
             // Populate indicators
             const indicators = document.querySelectorAll('.indicator-item');
             if (indicators.length >= 3) {
-                indicators[0].querySelector('p').textContent = getGradeColorIndicator(grade);
+                indicators[0].querySelector('p').textContent = formatClassification(classification);
                 indicators[1].querySelector('p').textContent = `MQ135: ${formatValue(data.mq135)}`;
-                indicators[2].querySelector('p').textContent = `DHT22: ${formatValue(data.temperature, '°C')} / ${formatValue(data.humidity, '%')}`;
+                indicators[2].querySelector('p').textContent = `DHT22: ${formatValue(data.temperature, temperatureUnit)} / ${formatValue(data.humidity, '%')}`;
             }
 
             // Populate recommendation
@@ -260,7 +276,10 @@
         if (!timestamp) return 'N/A';
 
         // Convert seconds → milliseconds
-        const date = new Date(timestamp * 1000);
+        const numericTimestamp = Number(timestamp);
+        const date = Number.isNaN(numericTimestamp)
+            ? new Date(timestamp)
+            : new Date(numericTimestamp < 10000000000 ? numericTimestamp * 1000 : numericTimestamp);
 
         if (isNaN(date.getTime())) return 'N/A';
 
@@ -277,6 +296,36 @@
         }
 
         return `${value}${suffix}`;
+    }
+
+    function formatClassification(classification) {
+        const labels = {
+            'fresh': 'Fresh',
+            'half_fresh': 'Half Fresh',
+            'spoiled': 'Spoiled'
+        };
+
+        return labels[classification] || 'N/A';
+    }
+
+    function getGradeFromClassification(classification) {
+        const grades = {
+            'fresh': 'A',
+            'half_fresh': 'B',
+            'spoiled': 'C'
+        };
+
+        return grades[classification] || 'N/A';
+    }
+
+    function getClassificationDescription(classification, grade) {
+        const descriptions = {
+            'fresh': 'Edge Impulse classified this sample as Fresh.',
+            'half_fresh': 'Edge Impulse classified this sample as Half Fresh.',
+            'spoiled': 'Edge Impulse classified this sample as Spoiled.'
+        };
+
+        return descriptions[classification] || `Classification unavailable for Grade ${grade}.`;
     }
 
     function getGradeSubtitle(grade) {

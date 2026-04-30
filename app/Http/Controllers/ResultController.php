@@ -32,6 +32,7 @@ class ResultController extends Controller
 
         return response()
             ->json([
+                'classification' => $latestScan['classification'] ?? null,
                 'grade' => $latestScan['grade'] ?? null,
                 'confidence' => $latestScan['confidence'] ?? null,
                 'mq135' => $latestScan['mq135'] ?? null,
@@ -47,13 +48,18 @@ class ResultController extends Controller
     {
         $request->validate([
             'scan_id' => 'required|string',
-            'grade' => 'required|string',
+            'classification' => 'nullable|required_without:grade|string|in:fresh,half_fresh,spoiled',
+            'grade' => 'nullable|required_without:classification|string',
             'confidence' => 'required|numeric',
             'details' => 'required|array',
         ]);
 
         $user = Auth::user();
         $scanId = $request->scan_id;
+        $classification = $request->classification;
+        $grade = $classification
+            ? $this->gradeFromClassification($classification)
+            : $request->grade;
 
         // Verify scan belongs to user
         $scan = $this->database->getReference('scans/' . $scanId)->getValue();
@@ -61,9 +67,16 @@ class ResultController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $this->database->getReference('scans/' . $scanId)->update([
+            'classification' => $classification,
+            'grade' => $grade,
+            'confidence' => $request->confidence,
+        ]);
+
         // Store result
         $this->database->getReference('results/' . $scanId)->set([
-            'grade' => $request->grade,
+            'classification' => $classification,
+            'grade' => $grade,
             'confidence' => $request->confidence,
             'details' => $request->details,
             'created_at' => now()->toISOString(),
@@ -84,5 +97,14 @@ class ResultController extends Controller
         $result = $this->database->getReference('results/' . $scanId)->getValue();
 
         return response()->json($result);
+    }
+
+    private function gradeFromClassification(string $classification): string
+    {
+        return match ($classification) {
+            'fresh' => 'A',
+            'half_fresh' => 'B',
+            'spoiled' => 'C',
+        };
     }
 }

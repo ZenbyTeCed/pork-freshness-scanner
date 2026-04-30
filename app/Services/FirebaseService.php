@@ -71,13 +71,17 @@ class FirebaseService
 
     private function formatScan(array $scan): array
     {
+        $classification = $this->normalizeClassification($scan['classification'] ?? null);
+        $grade = $this->gradeFromClassification($classification) ?? ($scan['grade'] ?? null);
+
         return [
-            'grade' => $scan['grade'] ?? null,
+            'classification' => $classification,
+            'grade' => $grade,
             'confidence' => isset($scan['confidence']) ? (float) $scan['confidence'] : null,
             'mq135' => isset($scan['mq135']) ? (float) $scan['mq135'] : null,
             'temperature' => isset($scan['temperature']) ? (float) $scan['temperature'] : null,
             'humidity' => isset($scan['humidity']) ? (float) $scan['humidity'] : null,
-            'image_url' => $scan['image_url'] ?? null,
+            'image_url' => $scan['image_url'] ?? (isset($scan['image_path']) ? asset('storage/' . $scan['image_path']) : null),
             'created_at' => $scan['created_at'] ?? null,
         ];
     }
@@ -95,5 +99,28 @@ class FirebaseService
         }
 
         return 0;
+    }
+
+    private function normalizeClassification(mixed $classification): ?string
+    {
+        if (! is_string($classification)) {
+            return null;
+        }
+
+        $classification = strtolower(trim($classification));
+
+        return in_array($classification, ['fresh', 'half_fresh', 'spoiled'], true)
+            ? $classification
+            : null;
+    }
+
+    private function gradeFromClassification(?string $classification): ?string
+    {
+        return match ($classification) {
+            'fresh' => 'A',
+            'half_fresh' => 'B',
+            'spoiled' => 'C',
+            default => null,
+        };
     }
 }
