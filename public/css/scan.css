@@ -335,11 +335,11 @@
 
 @media (max-width: 640px) {
     .scan-page {
-        padding: 24px 16px;
+        padding: 20px 16px;
     }
 
     .scan-header h1 {
-        font-size: 30px;
+        font-size: 28px;
     }
 
     .scan-header p,

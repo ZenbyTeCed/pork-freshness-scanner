@@ -304,15 +304,42 @@
 
 @media (max-width: 768px) {
     .history-page {
-        padding: 24px 16px;
+        padding: 20px 16px;
     }
 
     .history-header h1 {
-        font-size: 30px;
+        font-size: 26px;
+    }
+
+    .history-header p {
+        font-size: 13px;
+    }
+
+    .history-toolbar {
+        flex-direction: row;
+    }
+
+    .history-toolbar p {
+        font-size: 13px;
+    }
+
+    .history-toolbar button {
+        font-size: 12px;
+        height: 35px;
+        padding: 0 12px;
     }
 
     .history-item-card {
         align-items: flex-start;
+        gap: 5px;
+        padding-bottom: 10px;
+        padding-top: 20px;
+    }
+
+    .history-item-content p,
+    .history-meta {
+        font-size: 13px;    
+
     }
 
     .history-item-left {

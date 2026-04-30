@@ -415,11 +415,15 @@ input:disabled {
 
 @media (max-width: 768px) {
     .settings-page {
-        padding: 24px 16px;
+        padding: 20px 16px;
     }
 
     .settings-header h1 {
-        font-size: 30px;
+        font-size: 28px;
+    }
+
+    .settings-header p {
+        font-size: 13px;
     }
 
     .form-grid {
