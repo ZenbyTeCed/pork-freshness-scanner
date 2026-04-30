@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'firebase' => [
+        'scans_url' => env(
+            'FIREBASE_SCANS_URL',
+            'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app/scans.json'
+        ),
+    ],
+
 ];

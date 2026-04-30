@@ -144,8 +144,32 @@
                             </svg>
                         </div>
                         <div>
-                            <h3>Scan ID</h3>
-                            <p id="scanIdDisplay">SCAN-000001</p>
+                            <h3>MQ135</h3>
+                            <p id="mq135Value">N/A</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v8.25m0 0a3.75 3.75 0 1 1-2.25 6.75m2.25-6.75a3.75 3.75 0 0 0 2.25 6.75M9.75 18.75V5.25a2.25 2.25 0 1 1 4.5 0v13.5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Temperature</h3>
+                            <p id="temperatureValue">N/A</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75s5.25 5.625 5.25 10.125a5.25 5.25 0 1 1-10.5 0C6.75 9.375 12 3.75 12 3.75Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3>Humidity</h3>
+                            <p id="humidityValue">N/A</p>
                         </div>
                     </div>
                 </div>
@@ -166,44 +190,44 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const scanId = urlParams.get('scan_id');
-
-        if (!scanId) {
-            alert('No scan ID provided');
-            window.location.href = '/scan';
-            return;
-        }
-
+    async function loadLatestScan() {
         try {
-            const response = await axios.get(`/api/scans/${scanId}`);
-            const data = response.data;
+            const placeholderImage = @json(asset('images/Porky Logo.png'));
+            const response = await fetch('/api/latest-scan', {
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            console.log(data);
 
             // Populate image
-            document.getElementById('resultImage').src = `/storage/${data.scan.image_path}`;
+            document.getElementById('resultImage').src = data.image_url || placeholderImage;
 
             // Populate grade
-            const grade = data.result.grade;
+            const grade = data.grade;
             document.getElementById('gradeDisplay').textContent = `Grade ${grade}`;
             document.getElementById('gradeSubtitle').textContent = getGradeSubtitle(grade);
 
             // Populate confidence
-            const confidence = data.result.confidence * 100;
+            const confidence = normalizeConfidence(data.confidence);
             document.getElementById('confidenceValue').textContent = `${confidence.toFixed(1)}%`;
             document.getElementById('confidenceFill').style.width = `${confidence}%`;
 
             // Populate details
-            document.getElementById('scanIdDisplay').textContent = scanId;
-            document.getElementById('scanTimestamp').textContent = new Date(data.scan.created_at).toLocaleString();
+            document.getElementById('scanTimestamp').textContent = formatTimestamp(data.created_at);
+            document.getElementById('mq135Value').textContent = formatValue(data.mq135);
+            document.getElementById('temperatureValue').textContent = formatValue(data.temperature, '°C');
+            document.getElementById('humidityValue').textContent = formatValue(data.humidity, '%');
 
             // Populate indicators
             const indicators = document.querySelectorAll('.indicator-item');
-            const details = data.result.details;
             if (indicators.length >= 3) {
-                indicators[0].querySelector('p').textContent = details.color || 'N/A';
-                indicators[1].querySelector('p').textContent = details.surface || 'N/A';
-                indicators[2].querySelector('p').textContent = details.texture || 'N/A';
+                indicators[0].querySelector('p').textContent = getGradeColorIndicator(grade);
+                indicators[1].querySelector('p').textContent = `MQ135: ${formatValue(data.mq135)}`;
+                indicators[2].querySelector('p').textContent = `DHT22: ${formatValue(data.temperature, '°C')} / ${formatValue(data.humidity, '%')}`;
             }
 
             // Populate recommendation
@@ -214,7 +238,46 @@
             console.error('Error loading scan result:', error);
             alert('Error loading scan result');
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLatestScan);
+
+    window.addEventListener('load', function() {
+        setTimeout(loadLatestScan, 250);
     });
+
+    function normalizeConfidence(confidence) {
+        const value = Number(confidence);
+
+        if (Number.isNaN(value)) {
+            return 0;
+        }
+
+        return value <= 1 ? value * 100 : value;
+    }
+
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+
+        // Convert seconds → milliseconds
+        const date = new Date(timestamp * 1000);
+
+        if (isNaN(date.getTime())) return 'N/A';
+
+        return date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function formatValue(value, suffix = '') {
+        if (value === null || value === undefined || value === '') {
+            return 'N/A';
+        }
+
+        return `${value}${suffix}`;
+    }
 
     function getGradeSubtitle(grade) {
         const subtitles = {
@@ -223,6 +286,15 @@
             'C': 'Fair Freshness'
         };
         return subtitles[grade] || 'Unknown';
+    }
+
+    function getGradeColorIndicator(grade) {
+        const indicators = {
+            'A': 'Light pink to reddish',
+            'B': 'Acceptable color',
+            'C': 'Visible quality changes'
+        };
+        return indicators[grade] || 'N/A';
     }
 
     function getRecommendation(grade) {

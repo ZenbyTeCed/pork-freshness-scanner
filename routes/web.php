@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ResultController;
+use App\Services\FirebaseService;
 
 Route::get('/', function () {
     return view('pages.home');
@@ -24,8 +26,14 @@ Route::middleware('firebase.auth')->group(function () {
     Route::view('/settings', 'pages.settings')->name('settings');
     Route::post('/auth/session', [AuthController::class, 'updateSession'])->name('auth.session.update');
     Route::view('/result', 'pages.result')->name('result');
+    Route::get('/api/latest-scan', [ResultController::class, 'latest']);
 });
 
 Route::get('/session-check', function () {
     return response()->json(session()->all());
+});
+
+
+Route::get('/test-firebase', function (FirebaseService $firebase) {
+    return response()->json($firebase->getLatestScan());
 });
