@@ -3,10 +3,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewImage = document.getElementById('previewImage');
     const previewPlaceholder = document.getElementById('previewPlaceholder');
     const uploadTriggerBtn = document.getElementById('uploadTriggerBtn');
+    const cameraTriggerBtn = document.getElementById('cameraTriggerBtn');
     const uploadDropzone = document.getElementById('uploadDropzone');
     const removePreviewBtn = document.getElementById('removePreviewBtn');
     const classifyBtn = document.getElementById('submitScanBtn');
     const esp32CaptureBtn = document.getElementById('esp32CaptureBtn');
+    const cameraCard = document.getElementById('cameraCard');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const cameraMessage = document.getElementById('cameraMessage');
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    const takePhotoBtn = document.getElementById('takePhotoBtn');
+    const stopCameraBtn = document.getElementById('stopCameraBtn');
     const loadingState = document.getElementById('loadingState');
     const resultBox = document.getElementById('scanResult');
     const resultLabel = document.getElementById('scanResultLabel');
@@ -27,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let classifier = null;
     let modelInputSize = { width: 96, height: 96 };
     let loadingStartedAt = 0;
+    let cameraStream = null;
 
     function setStatus(message, isError = false) {
         scanStatus.textContent = message;
@@ -87,6 +96,41 @@ document.addEventListener('DOMContentLoaded', () => {
         resetResult();
     }
 
+    function setActiveCaptureButton(activeButton) {
+        [uploadTriggerBtn, cameraTriggerBtn, esp32CaptureBtn].forEach((button) => {
+            button?.classList.toggle('active', button === activeButton);
+        });
+    }
+
+    function setCameraMessage(message, isError = false) {
+        cameraMessage.textContent = message;
+        cameraMessage.classList.toggle('error', isError);
+    }
+
+    function scrollToMobileTarget(element) {
+        if (!window.matchMedia('(max-width: 900px)').matches || !element) {
+            return;
+        }
+
+        setTimeout(() => {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 100);
+    }
+
+    function showCameraCard() {
+        cameraCard.hidden = false;
+        setActiveCaptureButton(cameraTriggerBtn);
+        scrollToMobileTarget(cameraCard);
+    }
+
+    function hideCameraCard() {
+        cameraCard.hidden = true;
+        stopCamera();
+    }
+
     function showPreview(file) {
         if (!file) {
             resetPreview();
@@ -114,6 +158,77 @@ document.addEventListener('DOMContentLoaded', () => {
         previewImage.style.display = 'block';
         previewPlaceholder.style.display = 'none';
         removePreviewBtn.style.display = 'inline-flex';
+    }
+
+    async function startCamera() {
+        showCameraCard();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setCameraMessage('Camera capture is not supported by this browser.', true);
+            return;
+        }
+
+        try {
+            stopCamera();
+            setCameraMessage('Opening camera...');
+
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: 'environment' },
+                },
+                audio: false,
+            });
+
+            cameraPreview.srcObject = cameraStream;
+            startCameraBtn.disabled = true;
+            takePhotoBtn.disabled = false;
+            stopCameraBtn.disabled = false;
+            setCameraMessage('Camera ready. Frame the pork sample and take a photo.');
+        } catch (error) {
+            console.error(error);
+            setCameraMessage('Camera permission was denied or no camera is available.', true);
+            startCameraBtn.disabled = false;
+            takePhotoBtn.disabled = true;
+            stopCameraBtn.disabled = true;
+        }
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach((track) => track.stop());
+            cameraStream = null;
+        }
+
+        cameraPreview.srcObject = null;
+        startCameraBtn.disabled = false;
+        takePhotoBtn.disabled = true;
+        stopCameraBtn.disabled = true;
+    }
+
+    function takePhotoFromCamera() {
+        if (!cameraStream || cameraPreview.videoWidth === 0) {
+            setCameraMessage('Camera is not ready yet. Please wait a moment.', true);
+            return;
+        }
+
+        cameraCanvas.width = cameraPreview.videoWidth;
+        cameraCanvas.height = cameraPreview.videoHeight;
+        cameraCanvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+
+        cameraCanvas.toBlob((blob) => {
+            if (!blob) {
+                setCameraMessage('Could not capture a photo. Please try again.', true);
+                return;
+            }
+
+            const file = new File([blob], `camera-capture-${Date.now()}.jpg`, {
+                type: 'image/jpeg',
+            });
+
+            showPreview(file);
+            setCameraMessage('Photo captured. You can now classify it.');
+            scrollToMobileTarget(previewImage.closest('.scan-card'));
+        }, 'image/jpeg', 0.92);
     }
 
     function pickNumber(source, keys) {
@@ -320,11 +435,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    uploadTriggerBtn?.addEventListener('click', () => scanImageInput.click());
-    uploadDropzone?.addEventListener('click', () => scanImageInput.click());
+    uploadTriggerBtn?.addEventListener('click', () => {
+        setActiveCaptureButton(uploadTriggerBtn);
+        hideCameraCard();
+        scanImageInput.click();
+    });
+    cameraTriggerBtn?.addEventListener('click', () => {
+        showCameraCard();
+        startCamera();
+    });
+    startCameraBtn?.addEventListener('click', startCamera);
+    takePhotoBtn?.addEventListener('click', takePhotoFromCamera);
+    stopCameraBtn?.addEventListener('click', () => {
+        stopCamera();
+        setCameraMessage('Camera stopped.');
+    });
+    uploadDropzone?.addEventListener('click', () => {
+        setActiveCaptureButton(uploadTriggerBtn);
+        hideCameraCard();
+        scanImageInput.click();
+    });
     uploadDropzone?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            setActiveCaptureButton(uploadTriggerBtn);
+            hideCameraCard();
             scanImageInput.click();
         }
     });
@@ -345,14 +480,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     uploadDropzone?.addEventListener('drop', (event) => {
         event.preventDefault();
+        setActiveCaptureButton(uploadTriggerBtn);
+        hideCameraCard();
         uploadDropzone.classList.remove('dragover');
         showPreview(event.dataTransfer.files[0]);
     });
 
-    scanImageInput?.addEventListener('change', (event) => showPreview(event.target.files[0]));
+    scanImageInput?.addEventListener('change', (event) => {
+        setActiveCaptureButton(uploadTriggerBtn);
+        hideCameraCard();
+        showPreview(event.target.files[0]);
+    });
     removePreviewBtn?.addEventListener('click', resetPreview);
     classifyBtn?.addEventListener('click', classifySelectedImage);
-    esp32CaptureBtn?.addEventListener('click', captureWithEsp32);
+    esp32CaptureBtn?.addEventListener('click', () => {
+        setActiveCaptureButton(esp32CaptureBtn);
+        hideCameraCard();
+        captureWithEsp32();
+    });
+    window.addEventListener('beforeunload', stopCamera);
 
     resetPreview();
 });

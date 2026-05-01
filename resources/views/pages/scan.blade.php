@@ -21,6 +21,14 @@
                             <span>Upload Image</span>
                         </button>
 
+                        <button type="button" class="capture-btn" id="cameraTriggerBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.25 5.625h-1.5A2.25 2.25 0 0 0 1.5 7.875v10.5a2.25 2.25 0 0 0 2.25 2.25h16.5a2.25 2.25 0 0 0 2.25-2.25V7.875a2.25 2.25 0 0 0-2.25-2.25h-1.5a2.31 2.31 0 0 1-1.577-.55l-1.298-1.24A2.25 2.25 0 0 0 14.323 3h-4.646a2.25 2.25 0 0 0-1.552.635l-1.298 1.24Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 11.25a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+                            </svg>
+                            <span>Device Camera</span>
+                        </button>
+
                         <button type="button" class="capture-btn" id="esp32CaptureBtn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.25 5.625h-1.5A2.25 2.25 0 001.5 7.875v10.5a2.25 2.25 0 002.25 2.25h16.5a2.25 2.25 0 002.25-2.25V7.875a2.25 2.25 0 00-2.25-2.25h-1.5a2.31 2.31 0 01-1.577-.55l-1.298-1.24A2.25 2.25 0 0014.323 3h-4.646a2.25 2.25 0 00-1.552.635l-1.298 1.24z" />
@@ -44,6 +52,25 @@
                         <h3>Click to upload image</h3>
                         <p>or drag and drop</p>
                         <small>PNG, JPG up to 10MB</small>
+                    </div>
+                </div>
+
+                <div class="scan-card camera-card" id="cameraCard" hidden>
+                    <h2>Camera Capture</h2>
+
+                    <div class="camera-preview-wrap">
+                        <video id="cameraPreview" class="camera-preview" autoplay playsinline muted></video>
+                        <canvas id="cameraCanvas" hidden></canvas>
+                    </div>
+
+                    <p id="cameraMessage" class="camera-message">
+                        Open the camera, frame the pork sample, then take a photo.
+                    </p>
+
+                    <div class="camera-actions">
+                        <button type="button" class="camera-action-btn primary" id="startCameraBtn">Open Camera</button>
+                        <button type="button" class="camera-action-btn primary" id="takePhotoBtn" disabled>Take Photo</button>
+                        <button type="button" class="camera-action-btn secondary" id="stopCameraBtn" disabled>Stop</button>
                     </div>
                 </div>
 
