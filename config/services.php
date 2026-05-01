@@ -36,6 +36,14 @@ return [
     ],
 
     'firebase' => [
+        'database_url' => env(
+            'FIREBASE_DATABASE_URL',
+            'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app'
+        ),
+        'history_url' => env(
+            'FIREBASE_HISTORY_URL',
+            'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app/history.json'
+        ),
         'scans_url' => env(
             'FIREBASE_SCANS_URL',
             'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app/scans.json'

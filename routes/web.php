@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\ScanController;
 use App\Services\FirebaseService;
 
 Route::get('/', function () {
@@ -22,10 +23,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware('firebase.auth')->group(function () {
     Route::view('/dashboard', 'pages.dashboard')->name('dashboard');
     Route::view('/scan', 'pages.scan')->name('scan');
-    Route::view('/history', 'pages.history')->name('history');
+    Route::get('/history', [ResultController::class, 'history'])->name('history');
     Route::view('/settings', 'pages.settings')->name('settings');
     Route::post('/auth/session', [AuthController::class, 'updateSession'])->name('auth.session.update');
-    Route::view('/result', 'pages.result')->name('result');
+    Route::get('/result/{historyId}', [ResultController::class, 'result'])->name('result');
+    Route::post('/upload-image', [ScanController::class, 'uploadImage'])->name('upload.image');
+    Route::post('/capture-esp32', [ScanController::class, 'captureEsp32'])->name('capture.esp32');
     Route::get('/api/latest-scan', [ResultController::class, 'latest']);
 });
 

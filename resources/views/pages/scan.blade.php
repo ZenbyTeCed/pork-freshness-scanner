@@ -21,7 +21,7 @@
                             <span>Upload Image</span>
                         </button>
 
-                        <button type="button" class="capture-btn">
+                        <button type="button" class="capture-btn" id="esp32CaptureBtn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.25 5.625h-1.5A2.25 2.25 0 001.5 7.875v10.5a2.25 2.25 0 002.25 2.25h16.5a2.25 2.25 0 002.25-2.25V7.875a2.25 2.25 0 00-2.25-2.25h-1.5a2.31 2.31 0 01-1.577-.55l-1.298-1.24A2.25 2.25 0 0014.323 3h-4.646a2.25 2.25 0 00-1.552.635l-1.298 1.24z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 11.25a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
@@ -83,26 +83,38 @@
                 </div>
 
                 <div class="scan-card analysis-card">
-                    <h2>How Analysis Works</h2>
-                    <p>Our AI system evaluates multiple visual indicators including:</p>
+                    <h2>Browser Classification</h2>
+                    <p>The Edge Impulse WebAssembly model runs locally in this browser.</p>
 
                     <ul>
-                        <li>Color consistency and tone</li>
-                        <li>Surface moisture levels</li>
-                        <li>Texture and firmness appearance</li>
-                        <li>Signs of discoloration</li>
+                        <li>No backend upload is used for classification</li>
+                        <li>Accepted labels: fresh, half_fresh, spoiled</li>
+                        <li>The image is resized before it is sent to the model</li>
                     </ul>
 
                     <p class="analysis-note">
-                        Results are provided in seconds with a confidence score and detailed recommendations.
+                        Results are shown with the top prediction and confidence score.
                     </p>
 
                     <button type="button" class="submit-scan-btn" id="submitScanBtn">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>
-                        <span>Analyze Image</span>
+                        <span>Classify</span>
                     </button>
+
+                    <p id="scanStatus" class="scan-status" aria-live="polite"></p>
+                </div>
+
+                <div class="scan-card result-card">
+                    <h2>Result</h2>
+
+                    <div id="scanResult" class="scan-result">
+                        <strong id="scanResultLabel">No prediction yet</strong>
+                        <span id="scanResultConfidence">Select an image, then classify it in your browser.</span>
+                    </div>
+
+                    <ul id="scanResultDetails" class="result-details"></ul>
                 </div>
             </div>
         </div>
@@ -110,151 +122,20 @@
 </div>
 
 <script>
-    const scanImageInput = document.getElementById('scanImage');
-    const previewImage = document.getElementById('previewImage');
-    const previewPlaceholder = document.getElementById('previewPlaceholder');
-    const uploadTriggerBtn = document.getElementById('uploadTriggerBtn');
-    const uploadDropzone = document.getElementById('uploadDropzone');
-    const removePreviewBtn = document.getElementById('removePreviewBtn');
-
-    function resetPreview() {
-        previewImage.src = '';
-        previewImage.style.display = 'none';
-        previewPlaceholder.style.display = 'flex';
-        removePreviewBtn.style.display = 'none';
-        scanImageInput.value = '';
-    }
-
-    function showPreview(file) {
-        if (!file) {
-            resetPreview();
-            return;
+    window.Module = {
+        locateFile(path) {
+            return path.endsWith('.wasm')
+                ? "{{ asset('js/edge-impulse/model.wasm') }}"
+                : "{{ asset('js/edge-impulse') }}/" + path;
         }
-
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-        const maxSize = 10 * 1024 * 1024;
-
-        if (!allowedTypes.includes(file.type)) {
-            alert('Please upload a PNG or JPG image.');
-            resetPreview();
-            return;
-        }
-
-        if (file.size > maxSize) {
-            alert('Image must be 10MB or below.');
-            resetPreview();
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            previewImage.src = e.target.result;
-            previewImage.style.display = 'block';
-            previewPlaceholder.style.display = 'none';
-            removePreviewBtn.style.display = 'inline-flex';
-        };
-
-        reader.readAsDataURL(file);
-    }
-
-    if (uploadTriggerBtn) {
-        uploadTriggerBtn.addEventListener('click', function () {
-            scanImageInput.click();
-        });
-    }
-
-    if (uploadDropzone) {
-        uploadDropzone.addEventListener('click', function () {
-            scanImageInput.click();
-        });
-
-        uploadDropzone.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                scanImageInput.click();
-            }
-        });
-
-        ['dragenter', 'dragover'].forEach(function (eventName) {
-            uploadDropzone.addEventListener(eventName, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                uploadDropzone.classList.add('dragover');
-            });
-        });
-
-        ['dragleave', 'dragend'].forEach(function (eventName) {
-            uploadDropzone.addEventListener(eventName, function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                uploadDropzone.classList.remove('dragover');
-            });
-        });
-
-        uploadDropzone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadDropzone.classList.remove('dragover');
-
-            const file = e.dataTransfer.files[0];
-            showPreview(file);
-        });
-    }
-
-    if (scanImageInput) {
-        scanImageInput.addEventListener('change', function (event) {
-            const file = event.target.files[0];
-            showPreview(file);
-        });
-    }
-
-    if (removePreviewBtn) {
-        removePreviewBtn.addEventListener('click', function () {
-            resetPreview();
-        });
-    }
-
-    // Submit scan logic
-    const submitScanBtn = document.getElementById('submitScanBtn');
-
-    if (submitScanBtn) {
-        submitScanBtn.addEventListener('click', async function () {
-            if (!scanImageInput.files[0]) {
-                alert('Please select an image first.');
-                return;
-            }
-
-            // Show loading state
-            submitScanBtn.disabled = true;
-            submitScanBtn.innerHTML = '<span>Analyzing...</span>';
-
-            const formData = new FormData();
-            formData.append('image', scanImageInput.files[0]);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
-            try {
-                const response = await axios.post('/api/scan', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-
-                // Redirect to result page with scan_id
-                window.location.href = `/result?scan_id=${response.data.scan_id}`;
-            } catch (error) {
-                alert('Error submitting scan: ' + (error.response?.data?.message || 'Unknown error'));
-                submitScanBtn.disabled = false;
-                submitScanBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                    </svg>
-                    <span>Analyze Image</span>
-                `;
-            }
-        });
-    }
-
-    resetPreview();
+    };
+    window.scanRoutes = {
+        uploadImage: "{{ route('upload.image') }}",
+        captureEsp32: "{{ route('capture.esp32') }}",
+        csrfToken: "{{ csrf_token() }}"
+    };
 </script>
+<script src="{{ asset('js/edge-impulse/model.js') }}"></script>
+<script src="{{ asset('js/edge-impulse/run-impulse.js') }}"></script>
+<script src="{{ asset('js/edge-impulse/scan-classifier.js') }}"></script>
 @endsection

@@ -7,23 +7,23 @@ use Illuminate\Support\Facades\Log;
 
 class FirebaseService
 {
-    private string $scansUrl;
+    private string $historyUrl;
 
     public function __construct()
     {
-        $this->scansUrl = config(
-            'services.firebase.scans_url',
-            'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app/scans.json'
+        $this->historyUrl = config(
+            'services.firebase.history_url',
+            'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app/history.json'
         );
     }
 
     public function getLatestScan(): ?array
     {
         try {
-            $response = Http::acceptJson()->timeout(10)->get($this->scansUrl);
+            $response = Http::acceptJson()->timeout(10)->get($this->historyUrl);
 
             if ($response->forbidden() || $response->unauthorized()) {
-                Log::warning('Firebase permission denied while fetching scans.', [
+                Log::warning('Firebase permission denied while fetching history.', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
@@ -32,7 +32,7 @@ class FirebaseService
             }
 
             if ($response->failed()) {
-                Log::warning('Firebase returned an error while fetching scans.', [
+                Log::warning('Firebase returned an error while fetching history.', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
@@ -40,20 +40,21 @@ class FirebaseService
                 return null;
             }
 
-            $scans = $response->json();
+            $history = $response->json();
 
-            if (! is_array($scans) || $scans === []) {
+            if (! is_array($history) || $history === []) {
                 return null;
             }
 
-            $validScans = collect($scans)
-                ->filter(fn ($scan) => is_array($scan) && array_key_exists('created_at', $scan))
-                ->sortByDesc(fn ($scan) => $this->sortableTimestamp($scan['created_at']))
+            $validScans = collect($history)
+                ->filter(fn ($scan) => is_array($scan) && array_key_exists('timestamp', $scan))
+                ->filter(fn ($scan) => ($scan['user_id'] ?? null) === session('firebase_uid'))
+                ->sortByDesc(fn ($scan) => $this->sortableTimestamp($scan['timestamp']))
                 ->values();
 
             if ($validScans->isEmpty()) {
-                Log::warning('Firebase scans response did not contain valid scan data.', [
-                    'response' => $scans,
+                Log::warning('Firebase history response did not contain valid scan data.', [
+                    'response' => $history,
                 ]);
 
                 return null;
@@ -71,18 +72,21 @@ class FirebaseService
 
     private function formatScan(array $scan): array
     {
-        $classification = $this->normalizeClassification($scan['classification'] ?? null);
+        $classification = $this->normalizeClassification($scan['prediction'] ?? $scan['classification'] ?? null);
         $grade = $this->gradeFromClassification($classification) ?? ($scan['grade'] ?? null);
 
         return [
+            'prediction' => $classification,
             'classification' => $classification,
+            'source' => $scan['source'] ?? null,
             'grade' => $grade,
             'confidence' => isset($scan['confidence']) ? (float) $scan['confidence'] : null,
             'mq135' => isset($scan['mq135']) ? (float) $scan['mq135'] : null,
             'temperature' => isset($scan['temperature']) ? (float) $scan['temperature'] : null,
             'humidity' => isset($scan['humidity']) ? (float) $scan['humidity'] : null,
             'image_url' => $scan['image_url'] ?? (isset($scan['image_path']) ? asset('storage/' . $scan['image_path']) : null),
-            'created_at' => $scan['created_at'] ?? null,
+            'timestamp' => $scan['timestamp'] ?? null,
+            'created_at' => $scan['timestamp'] ?? null,
         ];
     }
 

@@ -131,7 +131,7 @@
             </div>
 
             @foreach ($activities as $activity)
-                <a href="{{ route('result') }}" class="activity-row">
+                <a href="{{ route('history') }}" class="activity-row">
                     <div class="activity-left">
                         <img src="https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=100&q=80" alt="Pork image">
                         
