@@ -41,10 +41,10 @@
                         <h2>AI Insight</h2>
                     </div>
 
-                    <p class="insight-text">
-                        This sample was classified as <strong>{{ $result['prediction_label'] }}</strong>
-                        with {{ $result['confidence_label'] }} confidence.
+                    <p id="aiInsightText" class="insight-text">
+                        {{ $result['ai_insight'] }}
                     </p>
+                    <p id="aiInsightNote" class="insight-note" hidden></p>
 
                     <div class="detected-section">
                         <h3>Analysis Summary</h3>
@@ -208,4 +208,45 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const insightText = document.getElementById('aiInsightText');
+        const insightNote = document.getElementById('aiInsightNote');
+
+        try {
+            insightNote.hidden = false;
+            insightNote.textContent = 'Generating Gemini insight...';
+
+            const response = await fetch("{{ route('result.ai-insight', ['historyId' => $historyId]) }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+
+            const data = await response.json();
+
+            if (response.status === 429) {
+                insightNote.textContent = data.message || 'AI limit reached. Showing local fallback insight.';
+                return;
+            }
+
+            if (!response.ok || !data.insight) {
+                insightNote.textContent = 'Gemini insight unavailable. Showing local fallback insight.';
+                return;
+            }
+
+            insightText.textContent = data.insight;
+            insightNote.hidden = true;
+            insightNote.textContent = '';
+        } catch (error) {
+            console.error(error);
+            insightNote.hidden = false;
+            insightNote.textContent = 'Gemini insight unavailable. Showing local fallback insight.';
+        }
+    });
+</script>
 @endsection

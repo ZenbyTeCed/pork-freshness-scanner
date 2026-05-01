@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Services\FirebaseService;
+use App\Services\GeminiInsightService;
 use Kreait\Firebase\Factory;
 
 class ResultController extends Controller
 {
     protected $database;
     protected FirebaseService $firebaseService;
+    protected GeminiInsightService $geminiInsightService;
 
-    public function __construct(FirebaseService $firebaseService)
+    public function __construct(FirebaseService $firebaseService, GeminiInsightService $geminiInsightService)
     {
         $this->firebaseService = $firebaseService;
+        $this->geminiInsightService = $geminiInsightService;
 
         $factory = (new Factory)
             ->withServiceAccount(base_path('firebase-credentials.json.json'))
@@ -29,9 +32,28 @@ class ResultController extends Controller
             abort(404);
         }
 
+        $result = $this->formatHistoryRecord($historyId, $record);
+        $result['ai_insight'] = $this->geminiInsightService->fallbackInsight($this->geminiData($result));
+
         return view('pages.result', [
             'historyId' => $historyId,
-            'result' => $this->formatHistoryRecord($historyId, $record),
+            'result' => $result,
+        ]);
+    }
+
+    public function generateAiInsight(string $historyId)
+    {
+        $record = $this->database->getReference("history/{$historyId}")->getValue();
+
+        if (! is_array($record) || ($record['user_id'] ?? null) !== session('firebase_uid')) {
+            abort(404);
+        }
+
+        $result = $this->formatHistoryRecord($historyId, $record);
+        $data = $this->geminiData($result);
+
+        return response()->json([
+            'insight' => $this->geminiInsightService->generateInsight($data),
         ]);
     }
 
@@ -166,6 +188,26 @@ class ResultController extends Controller
         ])
             ->filter()
             ->implode(' ');
+    }
+
+    private function geminiData(array $result): array
+    {
+        $data = [
+            'prediction' => $result['prediction'],
+            'prediction_label' => $result['prediction_label'],
+            'confidence' => $result['confidence'],
+            'confidence_label' => $result['confidence_label'],
+            'source' => $result['source'],
+            'analysis_type' => $result['analysis_type'],
+        ];
+
+        if ($result['source'] === 'esp32') {
+            $data['mq135'] = $result['mq135'];
+            $data['temperature'] = $result['temperature'];
+            $data['humidity'] = $result['humidity'];
+        }
+
+        return $data;
     }
 
     private function normalizePrediction(mixed $prediction): ?string
