@@ -21,7 +21,7 @@ Route::post('/auth/google', [AuthController::class, 'googleLogin']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('firebase.auth')->group(function () {
-    Route::view('/dashboard', 'pages.dashboard')->name('dashboard');
+    Route::get('/dashboard', [ResultController::class, 'dashboard'])->name('dashboard');
     Route::view('/scan', 'pages.scan')->name('scan');
     Route::get('/history', [ResultController::class, 'history'])->name('history');
     Route::view('/settings', 'pages.settings')->name('settings');

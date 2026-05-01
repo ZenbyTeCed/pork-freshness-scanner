@@ -265,7 +265,7 @@
 .grade-tag {
     padding: 6px 12px;
     border-radius: 999px;
-    font-size: 12x;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -297,6 +297,38 @@
 .activity-arrow {
     font-size: 28px;
     color: #94a3b8;
+}
+
+.dashboard-empty-state {
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.dashboard-empty-state h4 {
+    font-size: 16px;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.dashboard-empty-state p {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.dashboard-empty-state a {
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 @media (max-width: 992px) {

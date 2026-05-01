@@ -14,7 +14,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6 6a7.5 7.5 0 0 0 10.65 10.65Z" />
                     </svg>
-                    <input type="search" id="historySearch" placeholder="Search by ID, source, grade, prediction...">
+                    <input type="search" id="historySearch" placeholder="Search ID, upload, ESP32, fresh, Grade B, date...">
                 </div>
 
                 <div class="filter-box select-box">
@@ -56,7 +56,7 @@
                     data-timestamp="{{ $item['timestamp'] }}"
                     data-source="{{ $item['source_label'] }}"
                     data-prediction="{{ $item['prediction_label'] }}"
-                    data-search="{{ strtolower($item['id'].' '.$item['grade_label'].' '.$item['source_label'].' '.$item['prediction_label']) }}"
+                    data-search="{{ $item['search_text'] }}"
                 >
                     <div class="history-item-left">
                         <img src="{{ $item['image_url'] }}" alt="{{ $item['id'] }}">
@@ -105,15 +105,36 @@
     const historyCards = Array.from(document.querySelectorAll('.history-item-card'));
     let visibleHistoryCards = [...historyCards];
 
-    const normalize = (value) => value.toString().trim().toLowerCase();
+    const normalize = (value) => value
+        .toString()
+        .toLowerCase()
+        .replace(/[_-]/g, ' ')
+        .replace(/[^a-z0-9.%\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const getSearchText = (card) => normalize([
+        card.dataset.search,
+        card.dataset.id,
+        card.dataset.grade,
+        card.dataset.gradeClass,
+        card.dataset.confidence,
+        card.dataset.date,
+        card.dataset.source,
+        card.dataset.prediction,
+    ].join(' '));
+
+    const searchIndex = new Map(historyCards.map((card) => [card, getSearchText(card)]));
 
     const updateHistory = () => {
-        const searchTerm = normalize(historySearch.value);
+        const searchTerms = normalize(historySearch.value).split(' ').filter(Boolean);
         const selectedGrade = gradeFilter.value;
         const sortDirection = sortFilter.value;
 
         visibleHistoryCards = historyCards.filter((card) => {
-            const matchesSearch = !searchTerm || card.dataset.search.includes(searchTerm);
+            const searchableText = searchIndex.get(card) || '';
+            const matchesSearch = searchTerms.length === 0 ||
+                searchTerms.every((term) => searchableText.includes(term));
             const matchesGrade = selectedGrade === 'all' || card.dataset.gradeClass === selectedGrade;
 
             return matchesSearch && matchesGrade;

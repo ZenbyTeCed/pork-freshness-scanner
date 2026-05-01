@@ -35,15 +35,48 @@ class ResultController extends Controller
         ]);
     }
 
+    public function dashboard()
+    {
+        $historyItems = $this->getUserHistoryItems();
+        $totalScans = $historyItems->count();
+        $today = now()->toDateString();
+        $scansToday = $historyItems
+            ->filter(fn ($record) => $this->dateKey($record['timestamp']) === $today)
+            ->count();
+        $averageConfidence = $totalScans > 0
+            ? round($historyItems->avg('confidence'), 1)
+            : 0;
+        $gradeCounts = [
+            $historyItems->where('grade', 'A')->count(),
+            $historyItems->where('grade', 'B')->count(),
+            $historyItems->where('grade', 'C')->count(),
+        ];
+        $gradeLabels = ['Grade A', 'Grade B', 'Grade C'];
+        $gradeSummary = collect($gradeLabels)
+            ->map(function ($label, $index) use ($gradeCounts, $totalScans) {
+                $count = $gradeCounts[$index];
+
+                return [
+                    'label' => $label,
+                    'count' => $count,
+                    'percent' => $totalScans > 0 ? round(($count / $totalScans) * 100) : 0,
+                ];
+            });
+
+        return view('pages.dashboard', [
+            'totalScans' => $totalScans,
+            'scansToday' => $scansToday,
+            'averageConfidence' => $averageConfidence,
+            'gradeCounts' => $gradeCounts,
+            'gradeLabels' => $gradeLabels,
+            'gradeSummary' => $gradeSummary,
+            'recentActivities' => $historyItems->take(5),
+        ]);
+    }
+
     public function history()
     {
-        $records = $this->database->getReference('history')->getValue();
-
-        $historyItems = collect(is_array($records) ? $records : [])
-            ->filter(fn ($record) => is_array($record) && ($record['user_id'] ?? null) === session('firebase_uid'))
-            ->map(fn ($record, $id) => $this->formatHistoryRecord((string) $id, $record))
-            ->sortByDesc(fn ($record) => strtotime($record['timestamp'] ?? '') ?: 0)
-            ->values();
+        $historyItems = $this->getUserHistoryItems();
 
         return view('pages.history', [
             'historyItems' => $historyItems,
@@ -63,6 +96,17 @@ class ResultController extends Controller
         return response()
             ->json($latestScan)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    }
+
+    private function getUserHistoryItems()
+    {
+        $records = $this->database->getReference('history')->getValue();
+
+        return collect(is_array($records) ? $records : [])
+            ->filter(fn ($record) => is_array($record) && ($record['user_id'] ?? null) === session('firebase_uid'))
+            ->map(fn ($record, $id) => $this->formatHistoryRecord((string) $id, $record))
+            ->sortByDesc(fn ($record) => strtotime($record['timestamp'] ?? '') ?: 0)
+            ->values();
     }
 
     private function formatHistoryRecord(string $id, array $record): array
@@ -91,7 +135,37 @@ class ResultController extends Controller
             'temperature' => $record['temperature'] ?? null,
             'humidity' => $record['humidity'] ?? null,
             'device_id' => $record['device_id'] ?? null,
+            'search_text' => $this->historySearchText($id, $record, $prediction, $grade, $confidence),
         ];
+    }
+
+    private function historySearchText(string $id, array $record, ?string $prediction, ?string $grade, float $confidence): string
+    {
+        $source = $record['source'] ?? 'upload';
+        $sourceLabel = $source === 'esp32' ? 'ESP32-CAM' : 'Uploaded Image';
+        $predictionLabel = $this->formatPrediction($prediction);
+        $timestamp = $record['timestamp'] ?? $record['created_at'] ?? null;
+        $dateLabel = $this->formatTimestamp($timestamp);
+        $aliases = [
+            $prediction,
+            str_replace('_', ' ', (string) $prediction),
+            $source,
+            str_replace('-', ' ', $sourceLabel),
+            $grade,
+            'grade ' . $grade,
+            number_format($confidence, 1) . '%',
+            (string) ($record['device_id'] ?? ''),
+        ];
+
+        return collect([
+            $id,
+            $sourceLabel,
+            $predictionLabel,
+            $dateLabel,
+            ...$aliases,
+        ])
+            ->filter()
+            ->implode(' ');
     }
 
     private function normalizePrediction(mixed $prediction): ?string
@@ -145,6 +219,19 @@ class ResultController extends Controller
             : date_create((string) $timestamp);
 
         return $date ? $date->format('M j, Y, g:i A') : 'N/A';
+    }
+
+    private function dateKey(mixed $timestamp): ?string
+    {
+        if (! $timestamp) {
+            return null;
+        }
+
+        $date = is_numeric($timestamp)
+            ? date_create('@' . ((int) $timestamp > 10000000000 ? (int) ($timestamp / 1000) : (int) $timestamp))
+            : date_create((string) $timestamp);
+
+        return $date ? $date->format('Y-m-d') : null;
     }
 
     private function recommendationFromGrade(?string $grade): string
