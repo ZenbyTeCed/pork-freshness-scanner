@@ -3,6 +3,7 @@
 @section('content')
 @php
     $isEsp32 = $result['source'] === 'esp32';
+    $gradeClass = 'grade-' . ($result['grade_class'] ?: 'unknown');
 @endphp
 
 <div class="result-page">
@@ -76,18 +77,28 @@
                     </div>
                 </div>
 
-                <div class="result-card recommendation-card">
+                <div class="result-card recommendation-card {{ $gradeClass }}">
                     <h2>Recommendation</h2>
                     <p>{{ $result['recommendation'] }}</p>
                 </div>
             </div>
 
             <div class="result-right">
-                <div class="result-card grade-card">
+                <div class="result-card grade-card {{ $gradeClass }}">
                     <div class="grade-icon-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
+                        @if ($result['grade_class'] === 'b')
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4.5m0 3.75h.008v.008H12v-.008ZM10.29 3.86 1.82 18a2.25 2.25 0 0 0 1.93 3.38h16.5A2.25 2.25 0 0 0 22.18 18L13.71 3.86a2.25 2.25 0 0 0-3.42 0Z" />
+                            </svg>
+                        @elseif ($result['grade_class'] === 'c')
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        @else
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                        @endif
                     </div>
 
                     <h2>{{ $result['grade_label'] }}</h2>
@@ -117,7 +128,7 @@
                     </div>
 
                     <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: {{ min(100, max(0, $result['confidence'])) }}%;"></div>
+                        <div class="confidence-fill {{ $gradeClass }}" style="width: {{ min(100, max(0, $result['confidence'])) }}%;"></div>
                     </div>
 
                     <p class="confidence-note">

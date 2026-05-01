@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const removePreviewBtn = document.getElementById('removePreviewBtn');
     const classifyBtn = document.getElementById('submitScanBtn');
     const esp32CaptureBtn = document.getElementById('esp32CaptureBtn');
+    const loadingState = document.getElementById('loadingState');
     const resultBox = document.getElementById('scanResult');
     const resultLabel = document.getElementById('scanResultLabel');
     const resultConfidence = document.getElementById('scanResultConfidence');
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     const maxSize = 10 * 1024 * 1024;
+    const minimumLoadingTime = 1000;
     const labelClasses = {
         fresh: 'result-fresh',
         half_fresh: 'result-half-fresh',
@@ -24,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFile = null;
     let classifier = null;
     let modelInputSize = { width: 96, height: 96 };
+    let loadingStartedAt = 0;
 
     function setStatus(message, isError = false) {
         scanStatus.textContent = message;
@@ -31,11 +34,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetResult() {
+        hideLoadingState(true);
+        showResultContainer();
         resultBox.className = 'scan-result';
         resultLabel.textContent = 'No prediction yet';
         resultConfidence.textContent = 'Select an image, then classify it in your browser.';
         resultDetails.innerHTML = '';
         setStatus('');
+    }
+
+    function showLoadingState() {
+        loadingStartedAt = Date.now();
+        loadingState.style.display = 'flex';
+        resultBox.style.display = 'none';
+        resultDetails.style.display = 'none';
+    }
+
+    async function hideLoadingState(skipDelay = false) {
+        if (!loadingState) return;
+
+        const elapsedTime = Date.now() - loadingStartedAt;
+        const remainingDelay = Math.max(0, minimumLoadingTime - elapsedTime);
+
+        if (!skipDelay && remainingDelay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+        }
+
+        loadingState.style.display = 'none';
+    }
+
+    function showResultContainer() {
+        resultBox.style.display = 'flex';
+        resultDetails.style.display = 'flex';
+    }
+
+    function showResultError(message) {
+        showResultContainer();
+        resultBox.className = 'scan-result result-error';
+        resultLabel.textContent = 'Analysis failed';
+        resultConfidence.textContent = message;
+        resultDetails.innerHTML = '';
     }
 
     function resetPreview() {
@@ -164,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const confidence = Math.round(prediction.value * 100);
 
         resultBox.className = `scan-result ${labelClass}`;
+        showResultContainer();
         resultLabel.textContent = prediction.label;
         resultConfidence.textContent = `${confidence}% confidence`;
         resultDetails.innerHTML = sortedResults
@@ -217,7 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         classifyBtn.disabled = true;
         classifyBtn.querySelector('span').textContent = 'Classifying...';
-        setStatus('Classifying in browser...');
+        setStatus('');
+        showLoadingState();
 
         try {
             const edgeImpulseClassifier = await loadClassifier();
@@ -232,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const sortedResults = [...result.results].sort((a, b) => b.value - a.value);
             const prediction = sortedResults[0];
 
+            await hideLoadingState();
             renderPrediction(result.results);
             setStatus('Saving result to history...');
 
@@ -239,8 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = redirectUrl;
         } catch (error) {
             console.error(error);
-            resetResult();
-            setStatus(error.message || 'Classification failed. Please try another image.', true);
+            await hideLoadingState();
+            showResultError('Analysis failed. Try again.');
+            setStatus(error.message || 'Analysis failed. Try again.', true);
         } finally {
             classifyBtn.disabled = false;
             classifyBtn.querySelector('span').textContent = 'Classify';

@@ -109,6 +109,11 @@
                 <div class="scan-card result-card">
                     <h2>Result</h2>
 
+                    <div id="loadingState" class="loading-state" style="display:none;" aria-live="polite">
+                        <div class="spinner"></div>
+                        <p>Analyzing image using AI<span class="loading-dots"></span></p>
+                    </div>
+
                     <div id="scanResult" class="scan-result">
                         <strong id="scanResultLabel">No prediction yet</strong>
                         <span id="scanResultConfidence">Select an image, then classify it in your browser.</span>
