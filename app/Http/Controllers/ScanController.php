@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Kreait\Firebase\Factory;
@@ -68,7 +67,7 @@ class ScanController extends Controller
         $commandPath = "commands/{$deviceId}";
         $requestedAt = now()->toISOString();
         $requestedBy = session('firebase_uid') ?: 'web';
-        $previousMeatResult = $this->latestEsp32ResultFromMeat();
+        $existingHistoryIds = $this->historyIds();
 
         $command = [
             'command' => 'capture',
@@ -78,16 +77,18 @@ class ScanController extends Controller
             'requested_by' => $requestedBy,
         ];
 
-        // The ESP32 watches this command path, then writes the scan result to meat/.
+        // The ESP32 watches this command path, then writes the scan result to history/.
         $this->database->getReference($commandPath)->set($command);
         $savedCommand = $this->database->getReference($commandPath)->getValue();
 
         Log::info('ESP32 capture command written.', [
             'path' => $commandPath,
+            'command_id' => $commandId,
             'command' => $command,
             'saved_command' => $savedCommand,
             'is_pending_capture' => ($savedCommand['status'] ?? null) === 'pending'
                 && ($savedCommand['command'] ?? null) === 'capture',
+            'existing_history_count' => count($existingHistoryIds),
         ]);
 
         if (! $this->isSavedCaptureCommand($savedCommand, $commandId)) {
@@ -102,17 +103,17 @@ class ScanController extends Controller
             ], 500);
         }
 
-        $esp32Result = $this->waitForEsp32Result($deviceId, $commandId, $previousMeatResult);
+        $historyResult = $this->waitForEsp32HistoryResult($commandId, $requestedAt, $existingHistoryIds);
 
-        if (! $esp32Result) {
+        if (! $historyResult) {
             return response()->json([
                 'message' => 'No ESP32 result was received yet. Please try again after the device finishes scanning.',
             ], 504);
         }
 
-        $prediction = $this->normalizePrediction(
-            $esp32Result['prediction'] ?? $esp32Result['classification'] ?? null
-        );
+        $historyId = $historyResult['id'];
+        $historyRecord = $historyResult['record'];
+        $prediction = $this->normalizePrediction($historyRecord['prediction'] ?? $historyRecord['classification'] ?? null);
 
         if (! $prediction) {
             return response()->json([
@@ -120,24 +121,7 @@ class ScanController extends Controller
             ], 422);
         }
 
-        $confidence = $this->normalizeConfidence((float) ($esp32Result['confidence'] ?? 0));
-        $timestamp = $esp32Result['timestamp'] ?? $esp32Result['created_at'] ?? now()->toISOString();
-
-        $historyRef = $this->database->getReference('history')->push([
-            'user_id' => session('firebase_uid'),
-            'source' => 'esp32',
-            'image_url' => $esp32Result['image_url'] ?? null,
-            'prediction' => $prediction,
-            'confidence' => $confidence,
-            'recommendation' => $esp32Result['recommendation'] ?? $this->recommendationFromPrediction($prediction),
-            'timestamp' => $timestamp,
-            'mq135' => $this->nullableFloat($esp32Result['mq135'] ?? null),
-            'temperature' => $this->nullableFloat($esp32Result['temperature'] ?? null),
-            'humidity' => $this->nullableFloat($esp32Result['humidity'] ?? null),
-            'device_id' => $esp32Result['device_id'] ?? $deviceId,
-        ]);
-
-        $historyId = $historyRef->getKey();
+        $this->prepareEsp32HistoryRecordForResult($historyId, $historyRecord, $deviceId, $prediction);
 
         return response()->json([
             'history_id' => $historyId,
@@ -145,16 +129,14 @@ class ScanController extends Controller
         ]);
     }
 
-    private function waitForEsp32Result(string $deviceId, string $commandId, ?array $previousMeatResult): ?array
+    private function waitForEsp32HistoryResult(string $commandId, string $requestedAt, array $existingHistoryIds): ?array
     {
-        $startedAt = now();
-        $deadline = microtime(true) + 15;
-        $previousFingerprint = $this->resultFingerprint($previousMeatResult);
+        $deadline = microtime(true) + 60;
 
         while (microtime(true) < $deadline) {
-            $result = $this->latestEsp32ResultFromMeat();
+            $result = $this->findEsp32HistoryResult($commandId, $requestedAt, $existingHistoryIds);
 
-            if ($result && $this->isFreshEsp32Result($result, $startedAt, $commandId, $previousFingerprint)) {
+            if ($result) {
                 return $result;
             }
 
@@ -162,6 +144,13 @@ class ScanController extends Controller
         }
 
         return null;
+    }
+
+    private function historyIds(): array
+    {
+        $history = $this->database->getReference('history')->getValue();
+
+        return is_array($history) ? array_keys($history) : [];
     }
 
     private function isSavedCaptureCommand(mixed $savedCommand, string $commandId): bool
@@ -172,82 +161,120 @@ class ScanController extends Controller
             && ($savedCommand['status'] ?? null) === 'pending';
     }
 
-    private function latestEsp32ResultFromMeat(): ?array
+    private function findEsp32HistoryResult(string $commandId, string $requestedAt, array $existingHistoryIds): ?array
     {
-        $path = 'meat';
+        $path = 'history';
         $value = $this->database->getReference($path)->getValue();
-        $result = $this->pickLatestMeatResult($value);
-        $prediction = is_array($result)
-            ? $this->normalizePrediction($result['prediction'] ?? $result['classification'] ?? null)
-            : null;
-        $status = is_array($result)
-            ? $this->normalizeStatus($result['status'] ?? null)
+        $historyItems = collect(is_array($value) ? $value : [])
+            ->filter(fn ($record) => is_array($record))
+            ->map(fn ($record, $id) => [
+                'id' => (string) $id,
+                'record' => $record,
+            ])
+            ->values();
+
+        $commandMatch = $historyItems->first(fn ($item) => ($item['record']['command_id'] ?? null) === $commandId);
+        $newHistoryMatch = $historyItems
+            ->filter(fn ($item) => ! in_array($item['id'], $existingHistoryIds, true))
+            ->filter(fn ($item) => $this->hasValidPrediction($item['record']))
+            ->sortByDesc(fn ($item) => $this->historySortValue($item))
+            ->first();
+        $fallbackMatch = $historyItems
+            ->filter(fn ($item) => $this->isUsableEsp32HistoryRecord($item['record'], $requestedAt))
+            ->sortByDesc(fn ($item) => $this->historySortValue($item))
+            ->first();
+        $match = $commandMatch ?: $newHistoryMatch ?: $fallbackMatch;
+        $prediction = $match
+            ? $this->normalizePrediction($match['record']['prediction'] ?? $match['record']['classification'] ?? null)
             : null;
 
-        Log::debug('ESP32 Firebase result polling check.', [
+        Log::debug('ESP32 history polling check.', [
             'path' => $path,
-            'firebase_data' => $value,
-            'latest_result' => $result,
+            'command_id' => $commandId,
+            'requested_at' => $requestedAt,
+            'history_count' => is_array($value) ? count($value) : 0,
+            'existing_history_count' => count($existingHistoryIds),
+            'matching_history_found' => $match !== null,
+            'matched_by_command_id' => $commandMatch !== null,
+            'matched_by_new_history_record' => $commandMatch === null && $newHistoryMatch !== null,
+            'matched_by_latest_esp32_record' => $commandMatch === null && $newHistoryMatch === null && $fallbackMatch !== null,
+            'matching_history_id' => $match['id'] ?? null,
+            'matching_history_record' => $match['record'] ?? null,
             'has_prediction' => $prediction !== null,
             'prediction' => $prediction,
-            'has_done_status' => $status === 'done',
-            'status' => $status,
         ]);
 
-        if (! $result || ! $prediction || $status !== 'done') {
+        if (! $match || ! $prediction) {
             return null;
         }
 
-        return $result;
+        return $match;
     }
 
-    private function pickLatestMeatResult(mixed $value): ?array
+    private function hasValidPrediction(array $record): bool
     {
-        if (! is_array($value) || $value === []) {
-            return null;
-        }
-
-        if ($this->looksLikeScanResult($value)) {
-            return $value;
-        }
-
-        return collect($value)
-            ->filter(fn ($scan) => is_array($scan) && $this->looksLikeScanResult($scan))
-            ->sortByDesc(fn ($scan) => $this->sortableTimestamp($scan['timestamp'] ?? $scan['created_at'] ?? null))
-            ->first();
+        return $this->normalizePrediction($record['prediction'] ?? $record['classification'] ?? null) !== null;
     }
 
-    private function looksLikeScanResult(array $value): bool
+    private function isUsableEsp32HistoryRecord(array $record, string $requestedAt): bool
     {
-        return array_key_exists('prediction', $value)
-            || array_key_exists('classification', $value)
-            || array_key_exists('status', $value);
+        if (! $this->hasValidPrediction($record)) {
+            return false;
+        }
+
+        $source = strtolower((string) ($record['source'] ?? ''));
+        $looksLikeEsp32 = $source === 'esp32'
+            || array_key_exists('device_id', $record)
+            || array_key_exists('command_id', $record)
+            || array_key_exists('mq135', $record)
+            || array_key_exists('temperature', $record)
+            || array_key_exists('humidity', $record);
+
+        if (! $looksLikeEsp32) {
+            return false;
+        }
+
+        $recordTime = $this->sortableTimestamp($record['timestamp'] ?? $record['created_at'] ?? null);
+        $requestTime = $this->sortableTimestamp($requestedAt);
+
+        return $recordTime === 0 || $recordTime >= $requestTime - 5;
     }
 
-    private function isFreshEsp32Result(array $result, Carbon $startedAt, string $commandId, ?string $previousFingerprint): bool
+    private function historySortValue(array $item): int|string
     {
-        if (($result['command_id'] ?? null) === $commandId) {
-            return true;
-        }
+        $timestamp = $this->sortableTimestamp($item['record']['timestamp'] ?? $item['record']['created_at'] ?? null);
 
-        $timestamp = $result['timestamp'] ?? $result['created_at'] ?? null;
-
-        if (! $timestamp) {
-            return $this->resultFingerprint($result) !== $previousFingerprint;
-        }
-
-        return Carbon::parse($timestamp)->greaterThanOrEqualTo($startedAt->copy()->subSeconds(2));
+        return $timestamp > 0 ? $timestamp : $item['id'];
     }
 
-    private function resultFingerprint(?array $result): ?string
+    private function prepareEsp32HistoryRecordForResult(string $historyId, array $record, string $deviceId, string $prediction): void
     {
-        if (! $result) {
-            return null;
+        $updates = [];
+
+        if (($record['user_id'] ?? null) !== session('firebase_uid')) {
+            $updates['user_id'] = session('firebase_uid');
         }
 
-        ksort($result);
+        if (! array_key_exists('source', $record)) {
+            $updates['source'] = 'esp32';
+        }
 
-        return md5(json_encode($result));
+        if (! array_key_exists('device_id', $record)) {
+            $updates['device_id'] = $deviceId;
+        }
+
+        if (! array_key_exists('recommendation', $record)) {
+            $updates['recommendation'] = $this->recommendationFromPrediction($prediction);
+        }
+
+        if ($updates !== []) {
+            $this->database->getReference("history/{$historyId}")->update($updates);
+
+            Log::info('ESP32 history record prepared for result page.', [
+                'history_id' => $historyId,
+                'updates' => $updates,
+            ]);
+        }
     }
 
     private function normalizePrediction(mixed $prediction): ?string
@@ -266,11 +293,6 @@ class ScanController extends Controller
         };
     }
 
-    private function normalizeStatus(mixed $status): ?string
-    {
-        return is_string($status) ? strtolower(trim($status)) : null;
-    }
-
     private function sortableTimestamp(mixed $timestamp): int
     {
         if (is_numeric($timestamp)) {
@@ -287,11 +309,6 @@ class ScanController extends Controller
     private function normalizeConfidence(float $confidence): float
     {
         return $confidence <= 1 ? round($confidence * 100, 2) : round($confidence, 2);
-    }
-
-    private function nullableFloat(mixed $value): ?float
-    {
-        return is_numeric($value) ? (float) $value : null;
     }
 
     private function recommendationFromPrediction(string $prediction): string

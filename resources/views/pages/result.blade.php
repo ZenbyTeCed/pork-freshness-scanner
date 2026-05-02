@@ -22,13 +22,15 @@
 
         <div class="result-grid">
             <div class="result-left">
-                <div class="result-card">
-                    <h2>Sample Image</h2>
+                @unless ($isEsp32)
+                    <div class="result-card">
+                        <h2>Sample Image</h2>
 
-                    <div class="result-image-wrap">
-                        <img src="{{ $result['image_url'] }}" alt="Pork sample used for analysis">
+                        <div class="result-image-wrap">
+                            <img src="{{ $result['image_url'] }}" alt="Pork sample used for analysis">
+                        </div>
                     </div>
-                </div>
+                @endunless
 
                 <div class="result-card insight-card">
                     <div class="section-title with-icon">

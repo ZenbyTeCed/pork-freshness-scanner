@@ -52,6 +52,7 @@
                     data-confidence="{{ $item['confidence_label'] }}"
                     data-date="{{ $item['date_label'] }}"
                     data-timestamp="{{ $item['timestamp'] }}"
+                    data-sort-value="{{ $item['sort_value'] }}"
                     data-source="{{ $item['source_label'] }}"
                     data-prediction="{{ $item['prediction_label'] }}"
                     data-search="{{ $item['search_text'] }}"
@@ -138,8 +139,8 @@
         });
 
         visibleHistoryCards.sort((firstCard, secondCard) => {
-            const firstTime = new Date(firstCard.dataset.timestamp).getTime();
-            const secondTime = new Date(secondCard.dataset.timestamp).getTime();
+            const firstTime = Number(firstCard.dataset.sortValue || 0);
+            const secondTime = Number(secondCard.dataset.sortValue || 0);
 
             return sortDirection === 'oldest'
                 ? firstTime - secondTime

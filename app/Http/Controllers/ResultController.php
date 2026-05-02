@@ -28,7 +28,7 @@ class ResultController extends Controller
     {
         $record = $this->database->getReference("history/{$historyId}")->getValue();
 
-        if (! is_array($record) || ($record['user_id'] ?? null) !== session('firebase_uid')) {
+        if (! is_array($record) || ! $this->canUseHistoryRecord($record)) {
             abort(404);
         }
 
@@ -45,7 +45,7 @@ class ResultController extends Controller
     {
         $record = $this->database->getReference("history/{$historyId}")->getValue();
 
-        if (! is_array($record) || ($record['user_id'] ?? null) !== session('firebase_uid')) {
+        if (! is_array($record) || ! $this->canUseHistoryRecord($record)) {
             abort(404);
         }
 
@@ -124,10 +124,31 @@ class ResultController extends Controller
         $records = $this->database->getReference('history')->getValue();
 
         return collect(is_array($records) ? $records : [])
-            ->filter(fn ($record) => is_array($record) && ($record['user_id'] ?? null) === session('firebase_uid'))
+            ->filter(fn ($record) => is_array($record) && $this->canUseHistoryRecord($record))
             ->map(fn ($record, $id) => $this->formatHistoryRecord((string) $id, $record))
-            ->sortByDesc(fn ($record) => strtotime($record['timestamp'] ?? '') ?: 0)
+            ->sortByDesc(fn ($record) => $record['sort_value'])
             ->values();
+    }
+
+    private function canUseHistoryRecord(array $record): bool
+    {
+        if (($record['user_id'] ?? null) === session('firebase_uid')) {
+            return true;
+        }
+
+        return $this->looksLikeEsp32Record($record);
+    }
+
+    private function looksLikeEsp32Record(array $record): bool
+    {
+        $source = strtolower((string) ($record['source'] ?? ''));
+
+        return $source === 'esp32'
+            || array_key_exists('device_id', $record)
+            || array_key_exists('command_id', $record)
+            || array_key_exists('mq135', $record)
+            || array_key_exists('temperature', $record)
+            || array_key_exists('humidity', $record);
     }
 
     private function formatHistoryRecord(string $id, array $record): array
@@ -138,9 +159,9 @@ class ResultController extends Controller
 
         return [
             'id' => $id,
-            'source' => $record['source'] ?? 'upload',
-            'source_label' => ($record['source'] ?? 'upload') === 'esp32' ? 'ESP32-CAM' : 'Uploaded Image',
-            'analysis_type' => ($record['source'] ?? 'upload') === 'esp32' ? 'Image and Sensor Scan' : 'Image Classification Only',
+            'source' => $this->sourceFromRecord($record),
+            'source_label' => $this->sourceFromRecord($record) === 'esp32' ? 'ESP32-CAM' : 'Uploaded Image',
+            'analysis_type' => $this->sourceFromRecord($record) === 'esp32' ? 'Image and Sensor Scan' : 'Image Classification Only',
             'image_url' => $record['image_url'] ?? asset('images/Porky Logo.png'),
             'prediction' => $prediction,
             'prediction_label' => $this->formatPrediction($prediction),
@@ -150,6 +171,7 @@ class ResultController extends Controller
             'confidence_label' => number_format($confidence, 1) . '%',
             'recommendation' => $this->messageFromPrediction($prediction),
             'timestamp' => $record['timestamp'] ?? $record['created_at'] ?? null,
+            'sort_value' => $this->historySortValue($id, $record),
             'date_label' => $this->formatTimestamp($record['timestamp'] ?? $record['created_at'] ?? null),
             'mq135' => $record['mq135'] ?? null,
             'temperature' => $record['temperature'] ?? null,
@@ -157,6 +179,15 @@ class ResultController extends Controller
             'device_id' => $record['device_id'] ?? null,
             'search_text' => $this->historySearchText($id, $record, $prediction, $confidence),
         ];
+    }
+
+    private function sourceFromRecord(array $record): string
+    {
+        if (($record['source'] ?? null) === 'esp32' || $this->looksLikeEsp32Record($record)) {
+            return 'esp32';
+        }
+
+        return 'upload';
     }
 
     private function historySearchText(string $id, array $record, ?string $prediction, float $confidence): string
@@ -213,6 +244,7 @@ class ResultController extends Controller
         }
 
         $prediction = strtolower(trim($prediction));
+        $prediction = str_replace([' ', '-'], '_', $prediction);
 
         return match ($prediction) {
             'fresh' => 'fresh',
@@ -257,6 +289,56 @@ class ResultController extends Controller
             : date_create((string) $timestamp);
 
         return $date ? $date->format('M j, Y, g:i A') : 'N/A';
+    }
+
+    private function historySortValue(string $id, array $record): int
+    {
+        $timestamp = $record['timestamp'] ?? $record['created_at'] ?? null;
+        $time = $this->timestampToUnix($timestamp);
+
+        return $time > 0 ? $time : $this->firebasePushIdToSortValue($id);
+    }
+
+    private function timestampToUnix(mixed $timestamp): int
+    {
+        if (! $timestamp) {
+            return 0;
+        }
+
+        if (is_numeric($timestamp)) {
+            $value = (int) $timestamp;
+
+            return $value > 10000000000 ? (int) ($value / 1000) : $value;
+        }
+
+        if (is_string($timestamp)) {
+            return strtotime($timestamp) ?: 0;
+        }
+
+        return 0;
+    }
+
+    private function firebasePushIdToSortValue(string $id): int
+    {
+        $alphabet = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+
+        if (strlen($id) < 8) {
+            return 0;
+        }
+
+        $value = 0;
+
+        foreach (str_split(substr($id, 0, 8)) as $char) {
+            $index = strpos($alphabet, $char);
+
+            if ($index === false) {
+                return 0;
+            }
+
+            $value = ($value * 64) + $index;
+        }
+
+        return (int) floor($value / 1000);
     }
 
     private function dateKey(mixed $timestamp): ?string
