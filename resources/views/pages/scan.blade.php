@@ -138,7 +138,7 @@
 
                     <div id="loadingState" class="loading-state" style="display:none;" aria-live="polite">
                         <div class="spinner"></div>
-                        <p>Analyzing image using AI<span class="loading-dots"></span></p>
+                        <p id="loadingStateText">Analyzing image using AI<span class="loading-dots"></span></p>
                     </div>
 
                     <div id="scanResult" class="scan-result">
@@ -149,6 +149,39 @@
                     <ul id="scanResultDetails" class="result-details"></ul>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="esp32-modal" id="esp32ReadyModal" hidden>
+    <div class="esp32-modal-backdrop" data-esp32-close></div>
+
+    <div class="esp32-modal-panel" role="dialog" aria-modal="true" aria-labelledby="esp32ReadyTitle">
+        <button type="button" class="esp32-modal-close" id="esp32ModalCloseBtn" aria-label="Close ESP32 ready dialog">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="esp32-modal-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.25 5.625h-1.5A2.25 2.25 0 001.5 7.875v10.5a2.25 2.25 0 002.25 2.25h16.5a2.25 2.25 0 002.25-2.25V7.875a2.25 2.25 0 00-2.25-2.25h-1.5a2.31 2.31 0 01-1.577-.55l-1.298-1.24A2.25 2.25 0 0014.323 3h-4.646a2.25 2.25 0 00-1.552.635l-1.298 1.24z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 11.25a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+            </svg>
+        </div>
+
+        <h2 id="esp32ReadyTitle">Ready the ESP32-CAM</h2>
+        <p>Place the pork sample in front of the ESP32-CAM, keep the device powered, and make sure the view is clear before starting capture.</p>
+
+        <div class="esp32-modal-checklist">
+            <span>Device powered on</span>
+            <span>Sample is framed</span>
+            <span>Lighting is steady</span>
+        </div>
+
+        <div class="esp32-modal-actions">
+            <button type="button" class="esp32-modal-btn secondary" id="esp32ModalCancelBtn">Cancel</button>
+            <button type="button" class="esp32-modal-btn primary" id="esp32ReadyCaptureBtn">Ready to Capture</button>
         </div>
     </div>
 </div>

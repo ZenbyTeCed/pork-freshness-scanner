@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Kreait\Firebase\Factory;
 
 class ScanController extends Controller
@@ -62,18 +64,45 @@ class ScanController extends Controller
     public function captureEsp32(Request $request)
     {
         $deviceId = $request->input('device_id', self::DEVICE_ID);
-        $commandId = uniqid('capture_', true);
+        $commandId = 'capture_' . Str::uuid()->toString();
+        $commandPath = "commands/{$deviceId}";
+        $requestedAt = now()->toISOString();
+        $requestedBy = session('firebase_uid') ?: 'web';
+        $previousMeatResult = $this->latestEsp32ResultFromMeat();
 
-        // The ESP32 should watch this path and write its latest result back to Firebase.
-        $this->database->getReference("commands/{$deviceId}")->set([
+        $command = [
             'command' => 'capture',
             'command_id' => $commandId,
-            'requested_by' => session('firebase_uid'),
-            'requested_at' => now()->toISOString(),
             'status' => 'pending',
+            'requested_at' => $requestedAt,
+            'requested_by' => $requestedBy,
+        ];
+
+        // The ESP32 watches this command path, then writes the scan result to meat/.
+        $this->database->getReference($commandPath)->set($command);
+        $savedCommand = $this->database->getReference($commandPath)->getValue();
+
+        Log::info('ESP32 capture command written.', [
+            'path' => $commandPath,
+            'command' => $command,
+            'saved_command' => $savedCommand,
+            'is_pending_capture' => ($savedCommand['status'] ?? null) === 'pending'
+                && ($savedCommand['command'] ?? null) === 'capture',
         ]);
 
-        $esp32Result = $this->waitForEsp32Result($deviceId, $commandId);
+        if (! $this->isSavedCaptureCommand($savedCommand, $commandId)) {
+            Log::error('ESP32 capture command was not saved correctly.', [
+                'path' => $commandPath,
+                'expected_command' => $command,
+                'saved_command' => $savedCommand,
+            ]);
+
+            return response()->json([
+                'message' => 'The ESP32 capture command could not be saved. Please try again.',
+            ], 500);
+        }
+
+        $esp32Result = $this->waitForEsp32Result($deviceId, $commandId, $previousMeatResult);
 
         if (! $esp32Result) {
             return response()->json([
@@ -116,15 +145,16 @@ class ScanController extends Controller
         ]);
     }
 
-    private function waitForEsp32Result(string $deviceId, string $commandId): ?array
+    private function waitForEsp32Result(string $deviceId, string $commandId, ?array $previousMeatResult): ?array
     {
         $startedAt = now();
         $deadline = microtime(true) + 15;
+        $previousFingerprint = $this->resultFingerprint($previousMeatResult);
 
         while (microtime(true) < $deadline) {
-            $result = $this->latestEsp32Result($deviceId);
+            $result = $this->latestEsp32ResultFromMeat();
 
-            if ($result && $this->isFreshEsp32Result($result, $startedAt, $commandId)) {
+            if ($result && $this->isFreshEsp32Result($result, $startedAt, $commandId, $previousFingerprint)) {
                 return $result;
             }
 
@@ -134,35 +164,67 @@ class ScanController extends Controller
         return null;
     }
 
-    private function latestEsp32Result(string $deviceId): ?array
+    private function isSavedCaptureCommand(mixed $savedCommand, string $commandId): bool
     {
-        $paths = [
-            "esp32_results/{$deviceId}/latest",
-            "devices/{$deviceId}/latest_scan",
-        ];
+        return is_array($savedCommand)
+            && ($savedCommand['command'] ?? null) === 'capture'
+            && ($savedCommand['command_id'] ?? null) === $commandId
+            && ($savedCommand['status'] ?? null) === 'pending';
+    }
 
-        foreach ($paths as $path) {
-            $value = $this->database->getReference($path)->getValue();
+    private function latestEsp32ResultFromMeat(): ?array
+    {
+        $path = 'meat';
+        $value = $this->database->getReference($path)->getValue();
+        $result = $this->pickLatestMeatResult($value);
+        $prediction = is_array($result)
+            ? $this->normalizePrediction($result['prediction'] ?? $result['classification'] ?? null)
+            : null;
+        $status = is_array($result)
+            ? $this->normalizeStatus($result['status'] ?? null)
+            : null;
 
-            if (is_array($value) && $value !== []) {
-                return $value;
-            }
-        }
+        Log::debug('ESP32 Firebase result polling check.', [
+            'path' => $path,
+            'firebase_data' => $value,
+            'latest_result' => $result,
+            'has_prediction' => $prediction !== null,
+            'prediction' => $prediction,
+            'has_done_status' => $status === 'done',
+            'status' => $status,
+        ]);
 
-        $scans = $this->database->getReference('scans')->getValue();
-
-        if (! is_array($scans)) {
+        if (! $result || ! $prediction || $status !== 'done') {
             return null;
         }
 
-        return collect($scans)
-            ->filter(fn ($scan) => is_array($scan))
-            ->filter(fn ($scan) => ($scan['source'] ?? 'esp32') === 'esp32')
-            ->sortByDesc(fn ($scan) => strtotime($scan['timestamp'] ?? $scan['created_at'] ?? '') ?: 0)
+        return $result;
+    }
+
+    private function pickLatestMeatResult(mixed $value): ?array
+    {
+        if (! is_array($value) || $value === []) {
+            return null;
+        }
+
+        if ($this->looksLikeScanResult($value)) {
+            return $value;
+        }
+
+        return collect($value)
+            ->filter(fn ($scan) => is_array($scan) && $this->looksLikeScanResult($scan))
+            ->sortByDesc(fn ($scan) => $this->sortableTimestamp($scan['timestamp'] ?? $scan['created_at'] ?? null))
             ->first();
     }
 
-    private function isFreshEsp32Result(array $result, Carbon $startedAt, string $commandId): bool
+    private function looksLikeScanResult(array $value): bool
+    {
+        return array_key_exists('prediction', $value)
+            || array_key_exists('classification', $value)
+            || array_key_exists('status', $value);
+    }
+
+    private function isFreshEsp32Result(array $result, Carbon $startedAt, string $commandId, ?string $previousFingerprint): bool
     {
         if (($result['command_id'] ?? null) === $commandId) {
             return true;
@@ -171,10 +233,21 @@ class ScanController extends Controller
         $timestamp = $result['timestamp'] ?? $result['created_at'] ?? null;
 
         if (! $timestamp) {
-            return false;
+            return $this->resultFingerprint($result) !== $previousFingerprint;
         }
 
         return Carbon::parse($timestamp)->greaterThanOrEqualTo($startedAt->copy()->subSeconds(2));
+    }
+
+    private function resultFingerprint(?array $result): ?string
+    {
+        if (! $result) {
+            return null;
+        }
+
+        ksort($result);
+
+        return md5(json_encode($result));
     }
 
     private function normalizePrediction(mixed $prediction): ?string
@@ -184,12 +257,31 @@ class ScanController extends Controller
         }
 
         $prediction = strtolower(trim($prediction));
+        $prediction = str_replace([' ', '-'], '_', $prediction);
 
         return match ($prediction) {
             'fresh' => 'fresh',
             'not_fresh' => 'not_fresh',
             default => null,
         };
+    }
+
+    private function normalizeStatus(mixed $status): ?string
+    {
+        return is_string($status) ? strtolower(trim($status)) : null;
+    }
+
+    private function sortableTimestamp(mixed $timestamp): int
+    {
+        if (is_numeric($timestamp)) {
+            return (int) $timestamp;
+        }
+
+        if (is_string($timestamp)) {
+            return strtotime($timestamp) ?: 0;
+        }
+
+        return 0;
     }
 
     private function normalizeConfidence(float $confidence): float

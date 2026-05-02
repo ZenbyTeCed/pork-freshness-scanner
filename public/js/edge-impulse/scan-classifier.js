@@ -16,11 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const takePhotoBtn = document.getElementById('takePhotoBtn');
     const stopCameraBtn = document.getElementById('stopCameraBtn');
     const loadingState = document.getElementById('loadingState');
+    const loadingStateText = document.getElementById('loadingStateText');
     const resultBox = document.getElementById('scanResult');
     const resultLabel = document.getElementById('scanResultLabel');
     const resultConfidence = document.getElementById('scanResultConfidence');
     const resultDetails = document.getElementById('scanResultDetails');
     const scanStatus = document.getElementById('scanStatus');
+    const esp32ReadyModal = document.getElementById('esp32ReadyModal');
+    const esp32ModalCloseBtn = document.getElementById('esp32ModalCloseBtn');
+    const esp32ModalCancelBtn = document.getElementById('esp32ModalCancelBtn');
+    const esp32ReadyCaptureBtn = document.getElementById('esp32ReadyCaptureBtn');
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     const maxSize = 10 * 1024 * 1024;
@@ -55,8 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('');
     }
 
-    function showLoadingState() {
+    function showLoadingState(message = 'Analyzing image using AI') {
         loadingStartedAt = Date.now();
+        if (loadingStateText) {
+            loadingStateText.innerHTML = `${message}<span class="loading-dots"></span>`;
+        }
         loadingState.style.display = 'flex';
         resultBox.style.display = 'none';
         resultDetails.style.display = 'none';
@@ -132,6 +140,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideCameraCard() {
         cameraCard.hidden = true;
         stopCamera();
+    }
+
+    function openEsp32ReadyModal() {
+        hideCameraCard();
+        setActiveCaptureButton(esp32CaptureBtn);
+
+        if (!esp32ReadyModal) {
+            captureWithEsp32();
+            return;
+        }
+
+        esp32ReadyModal.hidden = false;
+        document.body.classList.add('modal-open');
+        esp32ReadyCaptureBtn?.focus();
+    }
+
+    function closeEsp32ReadyModal() {
+        if (!esp32ReadyModal) {
+            return;
+        }
+
+        esp32ReadyModal.hidden = true;
+        document.body.classList.remove('modal-open');
     }
 
     function showPreview(file) {
@@ -444,7 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function captureWithEsp32() {
         esp32CaptureBtn.disabled = true;
+        if (esp32ReadyCaptureBtn) {
+            esp32ReadyCaptureBtn.disabled = true;
+        }
         setStatus('Sending capture command to ESP32-CAM...');
+        scrollToMobileTarget(resultBox.closest('.scan-card'));
+        showLoadingState('Waiting for ESP32-CAM capture');
 
         try {
             const response = await fetch(window.scanRoutes.captureEsp32, {
@@ -467,9 +503,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = data.redirect_url;
         } catch (error) {
             console.error(error);
+            await hideLoadingState();
+            showResultError('ESP32 capture failed. Please try again.');
             setStatus(error.message || 'ESP32 capture failed. Please try again.', true);
         } finally {
             esp32CaptureBtn.disabled = false;
+            if (esp32ReadyCaptureBtn) {
+                esp32ReadyCaptureBtn.disabled = false;
+            }
         }
     }
 
@@ -532,9 +573,23 @@ document.addEventListener('DOMContentLoaded', () => {
     removePreviewBtn?.addEventListener('click', resetPreview);
     classifyBtn?.addEventListener('click', classifySelectedImage);
     esp32CaptureBtn?.addEventListener('click', () => {
-        setActiveCaptureButton(esp32CaptureBtn);
-        hideCameraCard();
+        openEsp32ReadyModal();
+    });
+    esp32ReadyCaptureBtn?.addEventListener('click', () => {
+        closeEsp32ReadyModal();
         captureWithEsp32();
+    });
+    esp32ModalCloseBtn?.addEventListener('click', closeEsp32ReadyModal);
+    esp32ModalCancelBtn?.addEventListener('click', closeEsp32ReadyModal);
+    esp32ReadyModal?.addEventListener('click', (event) => {
+        if (event.target?.hasAttribute('data-esp32-close')) {
+            closeEsp32ReadyModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && esp32ReadyModal && !esp32ReadyModal.hidden) {
+            closeEsp32ReadyModal();
+        }
     });
     window.addEventListener('beforeunload', stopCamera);
 
