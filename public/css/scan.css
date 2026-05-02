@@ -625,6 +625,10 @@
         border-radius: 16px;
     }
 
+    .upload-card {
+        display: none;
+    }
+
     .upload-dropzone {
         min-height: 220px;
         padding: 20px 16px;
