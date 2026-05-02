@@ -1,50 +1,43 @@
-// Small browser helper for the Edge Impulse WebAssembly deployment.
-// Load this file after model.js, then create: new EdgeImpulseClassifier().
+// Classifier module
 let classifierInitialized = false;
-let classifierInitPromise = null;
 
-function initializeEdgeImpulseModule() {
-    if (classifierInitialized) {
-        return Promise.resolve();
-    }
+function markClassifierReady() {
+    classifierInitialized = true;
+}
 
-    if (classifierInitPromise) {
-        return classifierInitPromise;
-    }
-
-    classifierInitPromise = new Promise((resolve, reject) => {
-        const bootClassifier = () => {
-            try {
-                const ret = Module.init();
-
-                if (typeof ret === 'number' && ret !== 0) {
-                    reject(new Error('init() failed with code ' + ret));
-                    return;
-                }
-
-                classifierInitialized = true;
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        };
-
-        if (Module.calledRun) {
-            bootClassifier();
-            return;
-        }
-
-        Module.onRuntimeInitialized = bootClassifier;
-    });
-
-    return classifierInitPromise;
+if (Module.calledRun) {
+    markClassifierReady();
+} else {
+    Module.onRuntimeInitialized = markClassifierReady;
 }
 
 class EdgeImpulseClassifier {
     _initialized = false;
 
     init() {
-        return initializeEdgeImpulseModule();
+        if (this._initialized) return Promise.resolve();
+
+        if (classifierInitialized === true || Module.calledRun) {
+            classifierInitialized = true;
+            let ret = Module.init();
+            if (typeof ret === 'number' && ret != 0) {
+                return Promise.reject('init() failed with code ' + ret);
+            }
+            this._initialized = true;
+            return Promise.resolve();
+        }
+
+        return new Promise((resolve, reject) => {
+            Module.onRuntimeInitialized = () => {
+                classifierInitialized = true;
+                let ret = Module.init();
+                if (typeof ret === 'number' && ret != 0) {
+                    return reject('init() failed with code ' + ret);
+                }
+                this._initialized = true;
+                resolve();
+            };
+        });
     }
 
     getProjectInfo() {

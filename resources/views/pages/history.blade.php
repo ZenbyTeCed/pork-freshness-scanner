@@ -14,15 +14,14 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6 6a7.5 7.5 0 0 0 10.65 10.65Z" />
                     </svg>
-                    <input type="search" id="historySearch" placeholder="Search ID, upload, ESP32, fresh, Grade B, date...">
+                    <input type="search" id="historySearch" placeholder="Search ID, upload, ESP32, fresh, not fresh, date...">
                 </div>
 
                 <div class="filter-box select-box">
-                    <select id="gradeFilter" aria-label="Filter by grade">
-                        <option value="all">All Grades</option>
-                        <option value="a">Grade A</option>
-                        <option value="b">Grade B</option>
-                        <option value="c">Grade C</option>
+                    <select id="predictionFilter" aria-label="Filter by prediction">
+                        <option value="all">All Results</option>
+                        <option value="fresh">Fresh</option>
+                        <option value="not_fresh">Not Fresh</option>
                     </select>
                 </div>
 
@@ -49,8 +48,7 @@
                     href="{{ route('result', ['historyId' => $item['id']]) }}"
                     class="history-item-card"
                     data-id="{{ $item['id'] }}"
-                    data-grade="{{ $item['grade_label'] }}"
-                    data-grade-class="{{ $item['grade_class'] }}"
+                    data-prediction-class="{{ $item['prediction_class'] }}"
                     data-confidence="{{ $item['confidence_label'] }}"
                     data-date="{{ $item['date_label'] }}"
                     data-timestamp="{{ $item['timestamp'] }}"
@@ -64,7 +62,7 @@
                         <div class="history-item-content">
                             <div class="history-item-top">
                                 <span class="scan-id">{{ $item['id'] }}</span>
-                                <span class="grade-pill {{ $item['grade_class'] }}">{{ $item['grade_label'] }}</span>
+                                <span class="prediction-pill {{ $item['prediction_class'] }}">{{ $item['prediction_label'] }}</span>
                                 <span class="confidence-text">{{ $item['confidence_label'] }} confidence</span>
                             </div>
 
@@ -96,7 +94,7 @@
 
 <script>
     const historySearch = document.getElementById('historySearch');
-    const gradeFilter = document.getElementById('gradeFilter');
+    const predictionFilter = document.getElementById('predictionFilter');
     const sortFilter = document.getElementById('sortFilter');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
     const historyCount = document.getElementById('historyCount');
@@ -116,8 +114,7 @@
     const getSearchText = (card) => normalize([
         card.dataset.search,
         card.dataset.id,
-        card.dataset.grade,
-        card.dataset.gradeClass,
+        card.dataset.predictionClass,
         card.dataset.confidence,
         card.dataset.date,
         card.dataset.source,
@@ -128,16 +125,16 @@
 
     const updateHistory = () => {
         const searchTerms = normalize(historySearch.value).split(' ').filter(Boolean);
-        const selectedGrade = gradeFilter.value;
+        const selectedPrediction = predictionFilter.value;
         const sortDirection = sortFilter.value;
 
         visibleHistoryCards = historyCards.filter((card) => {
             const searchableText = searchIndex.get(card) || '';
             const matchesSearch = searchTerms.length === 0 ||
                 searchTerms.every((term) => searchableText.includes(term));
-            const matchesGrade = selectedGrade === 'all' || card.dataset.gradeClass === selectedGrade;
+            const matchesPrediction = selectedPrediction === 'all' || card.dataset.predictionClass === selectedPrediction;
 
-            return matchesSearch && matchesGrade;
+            return matchesSearch && matchesPrediction;
         });
 
         visibleHistoryCards.sort((firstCard, secondCard) => {
@@ -176,12 +173,11 @@
     const exportVisibleRows = () => {
         if (visibleHistoryCards.length === 0) return;
 
-        const headers = ['History ID', 'Source', 'Prediction', 'Grade', 'Confidence', 'Date'];
+        const headers = ['History ID', 'Source', 'Prediction', 'Confidence', 'Date'];
         const rows = visibleHistoryCards.map((card) => [
             card.dataset.id,
             card.dataset.source,
             card.dataset.prediction,
-            card.dataset.grade,
             card.dataset.confidence,
             card.dataset.date,
         ]);
@@ -202,7 +198,7 @@
     };
 
     historySearch.addEventListener('input', updateHistory);
-    gradeFilter.addEventListener('change', updateHistory);
+    predictionFilter.addEventListener('change', updateHistory);
     sortFilter.addEventListener('change', updateHistory);
     exportCsvBtn.addEventListener('click', exportVisibleRows);
     updateHistory();

@@ -27,8 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const minimumLoadingTime = 1000;
     const labelClasses = {
         fresh: 'result-fresh',
-        half_fresh: 'result-half-fresh',
-        spoiled: 'result-spoiled',
+        not_fresh: 'result-not-fresh',
+    };
+    const labelText = {
+        fresh: 'Fresh',
+        not_fresh: 'Not Fresh',
     };
 
     let selectedFile = null;
@@ -310,32 +313,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function normalizeModelLabel(label) {
+        const normalizedLabel = String(label || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+
+        if (normalizedLabel === 'fresh') {
+            return 'fresh';
+        }
+
+        if (normalizedLabel === 'not_fresh') {
+            return 'not_fresh';
+        }
+
+        return null;
+    }
+
+    function normalizeClassificationResults(results) {
+        return results
+            .map((result) => ({
+                label: normalizeModelLabel(result.label),
+                value: Number(result.value) || 0,
+            }))
+            .filter((result) => result.label);
+    }
+
     function renderPrediction(results) {
-        const sortedResults = [...results].sort((a, b) => b.value - a.value);
+        const sortedResults = normalizeClassificationResults(results).sort((a, b) => b.value - a.value);
         const prediction = sortedResults[0];
+
+        if (!prediction) {
+            showResultError('The model did not return fresh or not_fresh.');
+            return;
+        }
+
         const labelClass = labelClasses[prediction.label] || '';
         const confidence = Math.round(prediction.value * 100);
+        const message = recommendationFromPrediction(prediction.label);
 
         resultBox.className = `scan-result ${labelClass}`;
         showResultContainer();
-        resultLabel.textContent = prediction.label;
-        resultConfidence.textContent = `${confidence}% confidence`;
+        resultLabel.textContent = labelText[prediction.label] || 'Unknown';
+        resultConfidence.textContent = `${confidence}% confidence. ${message}`;
         resultDetails.innerHTML = sortedResults
             .map((result) => {
                 const score = Math.round(result.value * 100);
-                return `<li><span>${result.label}</span><strong>${score}%</strong></li>`;
+                const label = labelText[result.label] || result.label;
+                return `<li><span>${label}</span><strong>${score}%</strong></li>`;
             })
             .join('');
     }
 
     function recommendationFromPrediction(label) {
         const recommendations = {
-            fresh: 'Excellent quality. Safe for immediate consumption or storage.',
-            half_fresh: 'Acceptable quality. Keep refrigerated and cook thoroughly.',
-            spoiled: 'Poor quality indicators detected. Do not consume if spoilage is suspected.',
+            fresh: 'The sample appears fresh.',
+            not_fresh: 'The sample may no longer be fresh. Further checking is recommended.',
         };
 
-        return recommendations[label] || 'Review the result before consumption.';
+        return recommendations[label] || 'Review the result before making a handling decision.';
     }
 
     async function saveUploadResult(prediction, confidence) {
@@ -369,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        scrollToMobileTarget(resultBox.closest('.scan-card'));
         classifyBtn.disabled = true;
         classifyBtn.querySelector('span').textContent = 'Classifying...';
         setStatus('');
@@ -384,11 +418,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('The model returned no classification results.');
             }
 
-            const sortedResults = [...result.results].sort((a, b) => b.value - a.value);
+            const sortedResults = normalizeClassificationResults(result.results).sort((a, b) => b.value - a.value);
             const prediction = sortedResults[0];
 
+            if (!prediction) {
+                throw new Error('The model did not return fresh or not_fresh.');
+            }
+
             await hideLoadingState();
-            renderPrediction(result.results);
+            renderPrediction(sortedResults);
             setStatus('Saving result to history...');
 
             const redirectUrl = await saveUploadResult(prediction, prediction.value);
@@ -400,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setStatus(error.message || 'Analysis failed. Try again.', true);
         } finally {
             classifyBtn.disabled = false;
-            classifyBtn.querySelector('span').textContent = 'Classify';
+            classifyBtn.querySelector('span').textContent = 'Analyze Image';
         }
     }
 

@@ -5,7 +5,7 @@
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h1>Dashboard</h1>
-            <p>Monitor real-time pork freshness grading analytics</p>
+            <p>Monitor real-time pork freshness analytics</p>
         </div>
 
         <div class="stats-grid">
@@ -64,13 +64,13 @@
 
         <div class="charts-grid">
             <div class="chart-card">
-                <h3>Grade Distribution</h3>
+                <h3>Freshness Distribution</h3>
                 <div class="chart-canvas-wrap">
-                    <canvas id="gradeBarChart"></canvas>
+                    <canvas id="predictionBarChart"></canvas>
                 </div>
 
                 <div class="chart-summary">
-                    @foreach ($gradeSummary as $summary)
+                    @foreach ($predictionSummary as $summary)
                         <div>
                             <h4>{{ $summary['count'] }}</h4>
                             <p>{{ $summary['label'] }}</p>
@@ -87,9 +87,8 @@
                 </div>
 
                 <div class="pie-legend">
-                    <span><i class="legend-dot green"></i> {{ $gradeCounts[0] }}</span>
-                    <span><i class="legend-dot orange"></i> {{ $gradeCounts[1] }}</span>
-                    <span><i class="legend-dot red"></i> {{ $gradeCounts[2] }}</span>
+                    <span><i class="legend-dot green"></i> Fresh: {{ $predictionCounts[0] }}</span>
+                    <span><i class="legend-dot red"></i> Not Fresh: {{ $predictionCounts[1] }}</span>
                 </div>
             </div>
         </div>
@@ -107,7 +106,7 @@
 
                         <div class="activity-info">
                             <div class="activity-top">
-                                <span class="grade-tag {{ $activity['grade_class'] }}">{{ $activity['grade_label'] }}</span>
+                                <span class="prediction-tag {{ $activity['prediction_class'] }}">{{ $activity['prediction_label'] }}</span>
                                 <span class="confidence">{{ $activity['confidence_label'] }} confidence</span>
                             </div>
                             <p>{{ $activity['source_label'] }} &bull; {{ $activity['date_label'] }}</p>
@@ -129,11 +128,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const chartLabels = @json($gradeLabels);
-    const chartData = @json($gradeCounts);
-    const commonColors = ['#22c55e', '#f59e0b', '#ef4444'];
+    const chartLabels = @json($predictionLabels);
+    const chartData = @json($predictionCounts);
+    const commonColors = ['#22c55e', '#ef4444'];
 
-    const barCtx = document.getElementById('gradeBarChart');
+    const barCtx = document.getElementById('predictionBarChart');
     if (barCtx) {
         new Chart(barCtx, {
             type: 'bar',

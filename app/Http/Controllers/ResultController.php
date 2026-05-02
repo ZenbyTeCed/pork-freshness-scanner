@@ -68,15 +68,14 @@ class ResultController extends Controller
         $averageConfidence = $totalScans > 0
             ? round($historyItems->avg('confidence'), 1)
             : 0;
-        $gradeCounts = [
-            $historyItems->where('grade', 'A')->count(),
-            $historyItems->where('grade', 'B')->count(),
-            $historyItems->where('grade', 'C')->count(),
+        $predictionCounts = [
+            $historyItems->where('prediction', 'fresh')->count(),
+            $historyItems->where('prediction', 'not_fresh')->count(),
         ];
-        $gradeLabels = ['Grade A', 'Grade B', 'Grade C'];
-        $gradeSummary = collect($gradeLabels)
-            ->map(function ($label, $index) use ($gradeCounts, $totalScans) {
-                $count = $gradeCounts[$index];
+        $predictionLabels = ['Fresh', 'Not Fresh'];
+        $predictionSummary = collect($predictionLabels)
+            ->map(function ($label, $index) use ($predictionCounts, $totalScans) {
+                $count = $predictionCounts[$index];
 
                 return [
                     'label' => $label,
@@ -89,9 +88,9 @@ class ResultController extends Controller
             'totalScans' => $totalScans,
             'scansToday' => $scansToday,
             'averageConfidence' => $averageConfidence,
-            'gradeCounts' => $gradeCounts,
-            'gradeLabels' => $gradeLabels,
-            'gradeSummary' => $gradeSummary,
+            'predictionCounts' => $predictionCounts,
+            'predictionLabels' => $predictionLabels,
+            'predictionSummary' => $predictionSummary,
             'recentActivities' => $historyItems->take(5),
         ]);
     }
@@ -134,8 +133,8 @@ class ResultController extends Controller
     private function formatHistoryRecord(string $id, array $record): array
     {
         $prediction = $this->normalizePrediction($record['prediction'] ?? $record['classification'] ?? null);
-        $grade = $record['grade'] ?? $this->gradeFromPrediction($prediction);
         $confidence = $this->normalizeConfidence($record['confidence'] ?? 0);
+        $predictionClass = $prediction ?: 'unknown';
 
         return [
             'id' => $id,
@@ -145,23 +144,22 @@ class ResultController extends Controller
             'image_url' => $record['image_url'] ?? asset('images/Porky Logo.png'),
             'prediction' => $prediction,
             'prediction_label' => $this->formatPrediction($prediction),
+            'prediction_class' => $predictionClass,
+            'result_message' => $this->messageFromPrediction($prediction),
             'confidence' => $confidence,
             'confidence_label' => number_format($confidence, 1) . '%',
-            'grade' => $grade,
-            'grade_label' => 'Grade ' . ($grade ?: 'N/A'),
-            'grade_class' => strtolower((string) $grade),
-            'recommendation' => $record['recommendation'] ?? $this->recommendationFromGrade($grade),
+            'recommendation' => $this->messageFromPrediction($prediction),
             'timestamp' => $record['timestamp'] ?? $record['created_at'] ?? null,
             'date_label' => $this->formatTimestamp($record['timestamp'] ?? $record['created_at'] ?? null),
             'mq135' => $record['mq135'] ?? null,
             'temperature' => $record['temperature'] ?? null,
             'humidity' => $record['humidity'] ?? null,
             'device_id' => $record['device_id'] ?? null,
-            'search_text' => $this->historySearchText($id, $record, $prediction, $grade, $confidence),
+            'search_text' => $this->historySearchText($id, $record, $prediction, $confidence),
         ];
     }
 
-    private function historySearchText(string $id, array $record, ?string $prediction, ?string $grade, float $confidence): string
+    private function historySearchText(string $id, array $record, ?string $prediction, float $confidence): string
     {
         $source = $record['source'] ?? 'upload';
         $sourceLabel = $source === 'esp32' ? 'ESP32-CAM' : 'Uploaded Image';
@@ -173,8 +171,6 @@ class ResultController extends Controller
             str_replace('_', ' ', (string) $prediction),
             $source,
             str_replace('-', ' ', $sourceLabel),
-            $grade,
-            'grade ' . $grade,
             number_format($confidence, 1) . '%',
             (string) ($record['device_id'] ?? ''),
         ];
@@ -218,9 +214,11 @@ class ResultController extends Controller
 
         $prediction = strtolower(trim($prediction));
 
-        return in_array($prediction, ['fresh', 'half_fresh', 'spoiled'], true)
-            ? $prediction
-            : null;
+        return match ($prediction) {
+            'fresh' => 'fresh',
+            'not_fresh' => 'not_fresh',
+            default => null,
+        };
     }
 
     private function normalizeConfidence(mixed $confidence): float
@@ -230,23 +228,21 @@ class ResultController extends Controller
         return $value <= 1 ? round($value * 100, 2) : round($value, 2);
     }
 
-    private function gradeFromPrediction(?string $prediction): ?string
-    {
-        return match ($prediction) {
-            'fresh' => 'A',
-            'half_fresh' => 'B',
-            'spoiled' => 'C',
-            default => null,
-        };
-    }
-
     private function formatPrediction(?string $prediction): string
     {
         return match ($prediction) {
             'fresh' => 'Fresh',
-            'half_fresh' => 'Half Fresh',
-            'spoiled' => 'Spoiled',
+            'not_fresh' => 'Not Fresh',
             default => 'N/A',
+        };
+    }
+
+    private function messageFromPrediction(?string $prediction): string
+    {
+        return match ($prediction) {
+            'fresh' => 'The sample appears fresh.',
+            'not_fresh' => 'The sample may no longer be fresh. Further checking is recommended.',
+            default => 'Review the result before making a handling decision.',
         };
     }
 
@@ -276,13 +272,4 @@ class ResultController extends Controller
         return $date ? $date->format('Y-m-d') : null;
     }
 
-    private function recommendationFromGrade(?string $grade): string
-    {
-        return match ($grade) {
-            'A' => 'Excellent quality. Safe for immediate consumption or storage.',
-            'B' => 'Acceptable quality. Keep refrigerated and cook thoroughly.',
-            'C' => 'Poor quality indicators detected. Do not consume if spoilage is suspected.',
-            default => 'Review the result before consumption.',
-        };
-    }
 }

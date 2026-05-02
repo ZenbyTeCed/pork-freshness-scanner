@@ -452,21 +452,12 @@
     color: #047857;
 }
 
-.scan-result.result-half-fresh {
-    background: #fefce8;
-    border-color: #fde047;
-}
-
-.scan-result.result-half-fresh strong {
-    color: #a16207;
-}
-
-.scan-result.result-spoiled {
+.scan-result.result-not-fresh {
     background: #fef2f2;
     border-color: #fca5a5;
 }
 
-.scan-result.result-spoiled strong {
+.scan-result.result-not-fresh strong {
     color: #b91c1c;
 }
 

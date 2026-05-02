@@ -25,13 +25,12 @@ class ScanController extends Controller
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg|max:10240',
-            'prediction' => 'required|string|in:fresh,half_fresh,spoiled',
+            'prediction' => 'required|string|in:fresh,not_fresh',
             'confidence' => 'required|numeric|min:0|max:100',
         ]);
 
         $prediction = $request->string('prediction')->toString();
         $confidence = $this->normalizeConfidence((float) $request->confidence);
-        $grade = $this->gradeFromClassification($prediction);
         $timestamp = now()->toISOString();
 
         // Store the original uploaded image so the result page can show what was analyzed.
@@ -44,8 +43,7 @@ class ScanController extends Controller
             'image_url' => asset('storage/' . $imagePath),
             'prediction' => $prediction,
             'confidence' => $confidence,
-            'grade' => $grade,
-            'recommendation' => $this->recommendationFromGrade($grade),
+            'recommendation' => $this->recommendationFromPrediction($prediction),
             'timestamp' => $timestamp,
             'mq135' => null,
             'temperature' => null,
@@ -94,7 +92,6 @@ class ScanController extends Controller
         }
 
         $confidence = $this->normalizeConfidence((float) ($esp32Result['confidence'] ?? 0));
-        $grade = $this->gradeFromClassification($prediction);
         $timestamp = $esp32Result['timestamp'] ?? $esp32Result['created_at'] ?? now()->toISOString();
 
         $historyRef = $this->database->getReference('history')->push([
@@ -103,8 +100,7 @@ class ScanController extends Controller
             'image_url' => $esp32Result['image_url'] ?? null,
             'prediction' => $prediction,
             'confidence' => $confidence,
-            'grade' => $grade,
-            'recommendation' => $esp32Result['recommendation'] ?? $this->recommendationFromGrade($grade),
+            'recommendation' => $esp32Result['recommendation'] ?? $this->recommendationFromPrediction($prediction),
             'timestamp' => $timestamp,
             'mq135' => $this->nullableFloat($esp32Result['mq135'] ?? null),
             'temperature' => $this->nullableFloat($esp32Result['temperature'] ?? null),
@@ -189,9 +185,11 @@ class ScanController extends Controller
 
         $prediction = strtolower(trim($prediction));
 
-        return in_array($prediction, ['fresh', 'half_fresh', 'spoiled'], true)
-            ? $prediction
-            : null;
+        return match ($prediction) {
+            'fresh' => 'fresh',
+            'not_fresh' => 'not_fresh',
+            default => null,
+        };
     }
 
     private function normalizeConfidence(float $confidence): float
@@ -204,22 +202,12 @@ class ScanController extends Controller
         return is_numeric($value) ? (float) $value : null;
     }
 
-    private function gradeFromClassification(string $classification): string
+    private function recommendationFromPrediction(string $prediction): string
     {
-        return match ($classification) {
-            'fresh' => 'A',
-            'half_fresh' => 'B',
-            'spoiled' => 'C',
-        };
-    }
-
-    private function recommendationFromGrade(string $grade): string
-    {
-        return match ($grade) {
-            'A' => 'Excellent quality. Safe for immediate consumption or storage.',
-            'B' => 'Acceptable quality. Keep refrigerated and cook thoroughly.',
-            'C' => 'Poor quality indicators detected. Do not consume if spoilage is suspected.',
-            default => 'Review the result before consumption.',
+        return match ($prediction) {
+            'fresh' => 'The sample appears fresh.',
+            'not_fresh' => 'The sample may no longer be fresh. Further checking is recommended.',
+            default => 'Review the result before making a handling decision.',
         };
     }
 }

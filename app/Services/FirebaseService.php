@@ -73,13 +73,11 @@ class FirebaseService
     private function formatScan(array $scan): array
     {
         $classification = $this->normalizeClassification($scan['prediction'] ?? $scan['classification'] ?? null);
-        $grade = $this->gradeFromClassification($classification) ?? ($scan['grade'] ?? null);
 
         return [
             'prediction' => $classification,
             'classification' => $classification,
             'source' => $scan['source'] ?? null,
-            'grade' => $grade,
             'confidence' => isset($scan['confidence']) ? (float) $scan['confidence'] : null,
             'mq135' => isset($scan['mq135']) ? (float) $scan['mq135'] : null,
             'temperature' => isset($scan['temperature']) ? (float) $scan['temperature'] : null,
@@ -113,17 +111,9 @@ class FirebaseService
 
         $classification = strtolower(trim($classification));
 
-        return in_array($classification, ['fresh', 'half_fresh', 'spoiled'], true)
-            ? $classification
-            : null;
-    }
-
-    private function gradeFromClassification(?string $classification): ?string
-    {
         return match ($classification) {
-            'fresh' => 'A',
-            'half_fresh' => 'B',
-            'spoiled' => 'C',
+            'fresh' => 'fresh',
+            'not_fresh' => 'not_fresh',
             default => null,
         };
     }

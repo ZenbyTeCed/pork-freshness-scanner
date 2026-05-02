@@ -75,19 +75,15 @@ class GeminiInsightService
     public function fallbackInsight(array $data): string
     {
         $prediction = $data['prediction'] ?? null;
-        $label = $data['prediction_label'] ?? 'the selected freshness class';
+        $label = $data['prediction_label'] ?? 'the selected freshness result';
         $confidence = $data['confidence_label'] ?? 'the recorded';
         $source = $data['source'] ?? 'upload';
 
-        if ($prediction === 'spoiled') {
-            $guidance = 'The pork may show signs of spoilage, so it should not be consumed.';
-        } elseif ($prediction === 'half_fresh') {
-            $guidance = 'The pork may have moderate freshness, so use caution and check it further before deciding what to do.';
-        } elseif ($prediction === 'fresh') {
-            $guidance = 'The pork appears fresh based on the available result, but it should still be handled properly and stored cold if not used soon.';
-        } else {
-            $guidance = 'The freshness result should be reviewed carefully before making any handling decision.';
-        }
+        $guidance = match ($prediction) {
+            'fresh' => 'The sample appears fresh, but it should still be handled properly and stored cold if not used soon.',
+            'not_fresh' => 'The sample may no longer be fresh. Further checking is recommended before making a handling decision.',
+            default => 'The freshness result should be reviewed carefully before making any handling decision.',
+        };
 
         if ($source === 'esp32') {
             $context = 'This result uses image prediction plus available sensor readings.';

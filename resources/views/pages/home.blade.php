@@ -46,7 +46,7 @@
     <div class="porky-container">
         <div class="porky-section-heading">
             <h2>How It Works</h2>
-            <p>Three simple steps to grade pork freshness</p>
+            <p>Three simple steps to check pork freshness</p>
         </div>
 
         <div class="porky-steps">
@@ -97,7 +97,7 @@
     <div class="porky-container">
         <div class="porky-section-heading">
             <h2>Key Features</h2>
-            <p>Professional-grade freshness assessment technology</p>
+            <p>Practical freshness assessment technology</p>
         </div>
 
         <div class="porky-features-grid">
@@ -110,7 +110,7 @@
                     </svg>
                 </div>
                 <h3>Real-time Analysis</h3>
-                <p>Instant AI-powered freshness grading with high accuracy.</p>
+                <p>Instant AI-powered freshness checks with confidence scores.</p>
             </div>
 
             <div class="porky-feature-card">

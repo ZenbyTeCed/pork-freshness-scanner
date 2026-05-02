@@ -262,24 +262,19 @@
     flex-wrap: wrap;
 }
 
-.grade-tag {
+.prediction-tag {
     padding: 6px 12px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 500;
 }
 
-.grade-tag.a {
+.prediction-tag.fresh {
     background: #dcfce7;
     color: #16a34a;
 }
 
-.grade-tag.b {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.grade-tag.c {
+.prediction-tag.not_fresh {
     background: #fee2e2;
     color: #dc2626;
 }
@@ -419,7 +414,7 @@
         height: 64px;
     }
     
-    .activity-left span.grade-tag,
+    .activity-left span.prediction-tag,
     .activity-left span.confidence,
     .activity-info p {
         font-size: 12px;

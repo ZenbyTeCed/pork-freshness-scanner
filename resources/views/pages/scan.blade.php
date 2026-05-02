@@ -115,7 +115,7 @@
 
                     <ul>
                         <li>No backend upload is used for classification</li>
-                        <li>Accepted labels: fresh, half_fresh, spoiled</li>
+                        <li>Accepted labels: fresh, not_fresh</li>
                         <li>The image is resized before it is sent to the model</li>
                     </ul>
 
@@ -157,7 +157,7 @@
     window.Module = {
         locateFile(path) {
             return path.endsWith('.wasm')
-                ? "{{ asset('js/edge-impulse/model.wasm') }}"
+                ? "{{ asset('js/edge-impulse/edge-impulse-standalone.wasm') }}"
                 : "{{ asset('js/edge-impulse') }}/" + path;
         }
     };
@@ -167,7 +167,7 @@
         csrfToken: "{{ csrf_token() }}"
     };
 </script>
-<script src="{{ asset('js/edge-impulse/model.js') }}"></script>
+<script src="{{ asset('js/edge-impulse/edge-impulse-standalone.js') }}"></script>
 <script src="{{ asset('js/edge-impulse/run-impulse.js') }}"></script>
 <script src="{{ asset('js/edge-impulse/scan-classifier.js') }}"></script>
 @endsection
