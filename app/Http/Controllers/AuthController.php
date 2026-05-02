@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect' => route('dashboard'),
+            'redirect' => route('scan'),
         ]);
     }
 
@@ -72,7 +72,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect' => route('dashboard'),
+            'redirect' => route('scan'),
         ]);
     }
 
