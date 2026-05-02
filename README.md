@@ -144,3 +144,8 @@ MQ135 AOUT -- 10k --+-- GPIO13
 ---
 
 ## Output Meaning
+| Display | Meaning |
+| --- | --- |
+| FRESH | Meat is fresh |
+| SPOILED | Meat is spoiled |
+| WARN:TEMP | Temperature is high |
