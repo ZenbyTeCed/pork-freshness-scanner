@@ -28,10 +28,12 @@ class ScanController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg|max:10240',
             'prediction' => 'required|string|in:fresh,not_fresh',
             'confidence' => 'required|numeric|min:0|max:100',
+            'source' => 'nullable|string|in:upload,camera',
         ]);
 
         $prediction = $request->string('prediction')->toString();
         $confidence = $this->normalizeConfidence((float) $request->confidence);
+        $source = $request->input('source', 'upload');
         $timestamp = now()->toISOString();
 
         // Store the original uploaded image so the result page can show what was analyzed.
@@ -39,7 +41,7 @@ class ScanController extends Controller
 
         $historyRef = $this->database->getReference('history')->push([
             'user_id' => session('firebase_uid'),
-            'source' => 'upload',
+            'source' => $source,
             'image_path' => $imagePath,
             'image_url' => asset('storage/' . $imagePath),
             'prediction' => $prediction,
@@ -227,6 +229,7 @@ class ScanController extends Controller
             || array_key_exists('device_id', $record)
             || array_key_exists('command_id', $record)
             || array_key_exists('mq135', $record)
+            || array_key_exists('gas', $record)
             || array_key_exists('temperature', $record)
             || array_key_exists('humidity', $record);
 
@@ -251,20 +254,20 @@ class ScanController extends Controller
     {
         $updates = [];
 
-        if (($record['user_id'] ?? null) !== session('firebase_uid')) {
-            $updates['user_id'] = session('firebase_uid');
-        }
-
         if (! array_key_exists('source', $record)) {
             $updates['source'] = 'esp32';
         }
 
         if (! array_key_exists('device_id', $record)) {
-            $updates['device_id'] = $deviceId;
+            $updates['device_id'] = $record['user_id'] ?? $deviceId;
         }
 
         if (! array_key_exists('recommendation', $record)) {
             $updates['recommendation'] = $this->recommendationFromPrediction($prediction);
+        }
+
+        if (! array_key_exists('humidity', $record)) {
+            $updates['humidity'] = 'N/A';
         }
 
         if ($updates !== []) {

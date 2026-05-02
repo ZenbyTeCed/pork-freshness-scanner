@@ -79,13 +79,31 @@ class FirebaseService
             'classification' => $classification,
             'source' => $scan['source'] ?? null,
             'confidence' => isset($scan['confidence']) ? (float) $scan['confidence'] : null,
-            'mq135' => isset($scan['mq135']) ? (float) $scan['mq135'] : null,
+            'gas' => $scan['gas'] ?? $scan['mq135'] ?? null,
+            'mq135' => $scan['mq135'] ?? $scan['gas'] ?? null,
             'temperature' => isset($scan['temperature']) ? (float) $scan['temperature'] : null,
-            'humidity' => isset($scan['humidity']) ? (float) $scan['humidity'] : null,
-            'image_url' => $scan['image_url'] ?? (isset($scan['image_path']) ? asset('storage/' . $scan['image_path']) : null),
+            'humidity' => $scan['humidity'] ?? null,
+            'image_url' => $this->imageUrlFromScan($scan),
             'timestamp' => $scan['timestamp'] ?? null,
             'created_at' => $scan['timestamp'] ?? null,
         ];
+    }
+
+    private function imageUrlFromScan(array $scan): ?string
+    {
+        $imageUrl = $scan['image_url'] ?? null;
+
+        if (is_string($imageUrl) && trim($imageUrl) !== '' && strtoupper(trim($imageUrl)) !== 'N/A') {
+            return $imageUrl;
+        }
+
+        $imagePath = $scan['image_path'] ?? null;
+
+        if (is_string($imagePath) && trim($imagePath) !== '' && strtoupper(trim($imagePath)) !== 'N/A') {
+            return asset('storage/' . $imagePath);
+        }
+
+        return null;
     }
 
     private function sortableTimestamp(mixed $createdAt): int

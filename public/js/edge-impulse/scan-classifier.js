@@ -44,6 +44,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let modelInputSize = { width: 96, height: 96 };
     let loadingStartedAt = 0;
     let cameraStream = null;
+    let selectedSource = 'upload';
+
+    function showToast(message, type = 'info') {
+        let toastContainer = document.querySelector('.app-toast-container');
+
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'app-toast-container';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `app-toast ${type}`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 220);
+        }, 3200);
+    }
 
     function setStatus(message, isError = false) {
         scanStatus.textContent = message;
@@ -98,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetPreview() {
         selectedFile = null;
+        selectedSource = 'upload';
         previewImage.src = '';
         previewImage.style.display = 'none';
         previewPlaceholder.style.display = 'flex';
@@ -165,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.remove('modal-open');
     }
 
-    function showPreview(file) {
+    function showPreview(file, source = 'upload') {
         if (!file) {
             resetPreview();
             return;
@@ -184,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         selectedFile = file;
+        selectedSource = source;
         resetResult();
 
         const imageUrl = URL.createObjectURL(file);
@@ -259,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: 'image/jpeg',
             });
 
-            showPreview(file);
+            showPreview(file, 'camera');
             setCameraMessage('Photo captured. You can now classify it.');
             scrollToMobileTarget(previewImage.closest('.scan-card'));
         }, 'image/jpeg', 0.92);
@@ -408,6 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('prediction', prediction.label);
         formData.append('confidence', String(Math.round(prediction.value * 10000) / 100));
         formData.append('recommendation', recommendationFromPrediction(prediction.label));
+        formData.append('source', selectedSource);
 
         const response = await fetch(window.scanRoutes.uploadImage, {
             method: 'POST',
@@ -429,10 +455,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function classifySelectedImage() {
         if (!selectedFile) {
-            alert('Please select an image first.');
+            showToast('Please select an image before analyzing.', 'error');
             return;
         }
 
+        showToast('Analyzing image. Please wait...', 'info');
         scrollToMobileTarget(resultBox.closest('.scan-card'));
         classifyBtn.disabled = true;
         classifyBtn.querySelector('span').textContent = 'Classifying...';
@@ -461,12 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
             setStatus('Saving result to history...');
 
             const redirectUrl = await saveUploadResult(prediction, prediction.value);
+            showToast('Analysis complete. Opening result...', 'success');
             window.location.href = redirectUrl;
         } catch (error) {
             console.error(error);
             await hideLoadingState();
             showResultError('Analysis failed. Try again.');
             setStatus(error.message || 'Analysis failed. Try again.', true);
+            showToast(error.message || 'Analysis failed. Please try again.', 'error');
         } finally {
             classifyBtn.disabled = false;
             classifyBtn.querySelector('span').textContent = 'Analyze Image';
@@ -562,13 +591,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveCaptureButton(uploadTriggerBtn);
         hideCameraCard();
         uploadDropzone.classList.remove('dragover');
-        showPreview(event.dataTransfer.files[0]);
+        showPreview(event.dataTransfer.files[0], 'upload');
     });
 
     scanImageInput?.addEventListener('change', (event) => {
         setActiveCaptureButton(uploadTriggerBtn);
         hideCameraCard();
-        showPreview(event.target.files[0]);
+        showPreview(event.target.files[0], 'upload');
     });
     removePreviewBtn?.addEventListener('click', resetPreview);
     classifyBtn?.addEventListener('click', classifySelectedImage);

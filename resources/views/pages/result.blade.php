@@ -140,8 +140,8 @@
                     @if ($isEsp32)
                         <div class="detail-item">
                             <div>
-                                <h3>MQ135</h3>
-                                <p>{{ $result['mq135'] ?? 'N/A' }}</p>
+                                <h3>Gas</h3>
+                                <p>{{ $result['gas'] ?? 'N/A' }}</p>
                             </div>
                         </div>
 
@@ -161,7 +161,13 @@
                         <div class="detail-item">
                             <div>
                                 <h3>Humidity</h3>
-                                <p>{{ $result['humidity'] !== null ? $result['humidity'] . '%' : 'N/A' }}</p>
+                                <p>
+                                    @if (is_numeric($result['humidity']))
+                                        {{ $result['humidity'] }}%
+                                    @else
+                                        {{ $result['humidity'] ?? 'N/A' }}
+                                    @endif
+                                </p>
                             </div>
                         </div>
 

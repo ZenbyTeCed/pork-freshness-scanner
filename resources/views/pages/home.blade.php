@@ -11,7 +11,7 @@
 
             <h1 class="porky-hero-title">
                 AI-Based Pork <br>
-                Freshness Grading System
+                Freshness Detection System
             </h1>
 
             <p class="porky-hero-text">
@@ -87,7 +87,7 @@
                 </div>
                 <span class="porky-step-label">Step 3</span>
                 <h3>Result</h3>
-                <p>Receive instant grading (A, B, or C) with confidence scores and recommendations.</p>
+                <p>Receive a fresh or not fresh result with confidence scores and recommendations.</p>
             </div>
         </div>
     </div>

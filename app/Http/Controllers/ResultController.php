@@ -147,6 +147,7 @@ class ResultController extends Controller
             || array_key_exists('device_id', $record)
             || array_key_exists('command_id', $record)
             || array_key_exists('mq135', $record)
+            || array_key_exists('gas', $record)
             || array_key_exists('temperature', $record)
             || array_key_exists('humidity', $record);
     }
@@ -156,13 +157,14 @@ class ResultController extends Controller
         $prediction = $this->normalizePrediction($record['prediction'] ?? $record['classification'] ?? null);
         $confidence = $this->normalizeConfidence($record['confidence'] ?? 0);
         $predictionClass = $prediction ?: 'unknown';
+        $source = $this->sourceFromRecord($record);
 
         return [
             'id' => $id,
-            'source' => $this->sourceFromRecord($record),
-            'source_label' => $this->sourceFromRecord($record) === 'esp32' ? 'ESP32-CAM' : 'Uploaded Image',
-            'analysis_type' => $this->sourceFromRecord($record) === 'esp32' ? 'Image and Sensor Scan' : 'Image Classification Only',
-            'image_url' => $record['image_url'] ?? asset('images/Porky Logo.png'),
+            'source' => $source,
+            'source_label' => $this->sourceLabel($source),
+            'analysis_type' => $this->analysisType($source),
+            'image_url' => $this->imageUrlFromRecord($record),
             'prediction' => $prediction,
             'prediction_label' => $this->formatPrediction($prediction),
             'prediction_class' => $predictionClass,
@@ -173,12 +175,30 @@ class ResultController extends Controller
             'timestamp' => $record['timestamp'] ?? $record['created_at'] ?? null,
             'sort_value' => $this->historySortValue($id, $record),
             'date_label' => $this->formatTimestamp($record['timestamp'] ?? $record['created_at'] ?? null),
-            'mq135' => $record['mq135'] ?? null,
+            'gas' => $record['gas'] ?? $record['mq135'] ?? null,
+            'mq135' => $record['mq135'] ?? $record['gas'] ?? null,
             'temperature' => $record['temperature'] ?? null,
             'humidity' => $record['humidity'] ?? null,
-            'device_id' => $record['device_id'] ?? null,
+            'device_id' => $record['device_id'] ?? ($source === 'esp32' ? ($record['user_id'] ?? null) : null),
             'search_text' => $this->historySearchText($id, $record, $prediction, $confidence),
         ];
+    }
+
+    private function imageUrlFromRecord(array $record): string
+    {
+        $imageUrl = $record['image_url'] ?? null;
+
+        if (is_string($imageUrl) && trim($imageUrl) !== '' && strtoupper(trim($imageUrl)) !== 'N/A') {
+            return $imageUrl;
+        }
+
+        $imagePath = $record['image_path'] ?? null;
+
+        if (is_string($imagePath) && trim($imagePath) !== '' && strtoupper(trim($imagePath)) !== 'N/A') {
+            return asset('storage/' . $imagePath);
+        }
+
+        return asset('images/Porky Logo.png');
     }
 
     private function sourceFromRecord(array $record): string
@@ -187,7 +207,29 @@ class ResultController extends Controller
             return 'esp32';
         }
 
+        if (($record['source'] ?? null) === 'camera') {
+            return 'camera';
+        }
+
         return 'upload';
+    }
+
+    private function sourceLabel(string $source): string
+    {
+        return match ($source) {
+            'esp32' => 'ESP32-CAM',
+            'camera' => 'Device Camera',
+            default => 'Uploaded Image',
+        };
+    }
+
+    private function analysisType(string $source): string
+    {
+        return match ($source) {
+            'esp32' => 'Image and Sensor Scan',
+            'camera' => 'Device Camera Classification',
+            default => 'Image Classification Only',
+        };
     }
 
     private function historySearchText(string $id, array $record, ?string $prediction, float $confidence): string
@@ -230,6 +272,7 @@ class ResultController extends Controller
 
         if ($result['source'] === 'esp32') {
             $data['mq135'] = $result['mq135'];
+            $data['gas'] = $result['gas'];
             $data['temperature'] = $result['temperature'];
             $data['humidity'] = $result['humidity'];
         }
@@ -284,6 +327,10 @@ class ResultController extends Controller
             return 'N/A';
         }
 
+        if (is_numeric($timestamp) && (int) $timestamp < 1000000000) {
+            return (string) $timestamp;
+        }
+
         $date = is_numeric($timestamp)
             ? date_create('@' . ((int) $timestamp > 10000000000 ? (int) ($timestamp / 1000) : (int) $timestamp))
             : date_create((string) $timestamp);
@@ -307,6 +354,10 @@ class ResultController extends Controller
 
         if (is_numeric($timestamp)) {
             $value = (int) $timestamp;
+
+            if ($value < 1000000000) {
+                return 0;
+            }
 
             return $value > 10000000000 ? (int) ($value / 1000) : $value;
         }
@@ -344,6 +395,10 @@ class ResultController extends Controller
     private function dateKey(mixed $timestamp): ?string
     {
         if (! $timestamp) {
+            return null;
+        }
+
+        if (is_numeric($timestamp) && (int) $timestamp < 1000000000) {
             return null;
         }
 

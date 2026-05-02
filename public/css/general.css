@@ -18,6 +18,79 @@ a {
     text-decoration: none;
 }
 
+.app-toast-container {
+    position: fixed;
+    top: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(320px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.app-toast {
+    width: max-content;
+    max-width: 100%;
+    min-height: 34px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+    color: #1f2937;
+    padding: 7px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.app-toast::before {
+    content: "i";
+    width: 15px;
+    height: 15px;
+    border: 2px solid #3b82f6;
+    border-radius: 999px;
+    color: #3b82f6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 15px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.app-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.app-toast.success::before {
+    content: "\2713";
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.app-toast.error::before {
+    content: "!";
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.app-toast.info::before {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
 /* =========================
    COLOR SYSTEM
 ========================= */
@@ -369,6 +442,19 @@ a {
 }
 
 @media (max-width: 480px) {
+    .app-toast-container {
+        top: 14px;
+        left: 12px;
+        right: 12px;
+        transform: none;
+        width: auto;
+    }
+
+    .app-toast {
+        width: max-content;
+        max-width: 100%;
+    }
+
     .porky-header-inner {
         padding: 6px 0;
     }
