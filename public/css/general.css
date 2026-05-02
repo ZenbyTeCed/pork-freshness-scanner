@@ -473,6 +473,10 @@ body.modal-open {
         flex-wrap: nowrap;
     }
 
+    .porky-nav.is-guest {
+        display: none;
+    }
+
     .desktop-settings-link,
     .desktop-logout-form {
         display: none !important;

@@ -35,19 +35,32 @@
         </div>
 
         <div class="history-toolbar">
-            <p id="historyCount">Showing {{ count($historyItems) }} of {{ count($historyItems) }} scans</p>
+            <div class="history-count-group">
+                <p id="historyCount">Showing {{ count($historyItems) }} of {{ count($historyItems) }} scans</p>
 
-            <button type="button" id="exportCsvBtn" class="export-btn">
-                <span>Export CSV</span>
-            </button>
+                <button type="button" id="exportCsvBtn" class="export-btn">
+                    <span>Export CSV</span>
+                </button>
+            </div>
+
+            <div class="history-actions">
+                <label class="select-all-control">
+                    <input type="checkbox" id="selectAllHistory">
+                    <span>Select all</span>
+                </label>
+
+                <button type="button" id="deleteSelectedBtn" class="delete-history-btn" disabled>
+                    <span>Delete Selected</span>
+                </button>
+            </div>
         </div>
 
         <div class="history-list" id="historyList">
             @foreach ($historyItems as $item)
-                <a
-                    href="{{ route('result', ['historyId' => $item['id']]) }}"
+                <div
                     class="history-item-card"
                     data-id="{{ $item['id'] }}"
+                    data-url="{{ route('result', ['historyId' => $item['id']]) }}"
                     data-prediction-class="{{ $item['prediction_class'] }}"
                     data-confidence="{{ $item['confidence_label'] }}"
                     data-date="{{ $item['date_label'] }}"
@@ -57,6 +70,11 @@
                     data-prediction="{{ $item['prediction_label'] }}"
                     data-search="{{ $item['search_text'] }}"
                 >
+                    <label class="history-select" aria-label="Select history {{ $item['id'] }}">
+                        <input type="checkbox" class="history-checkbox" value="{{ $item['id'] }}">
+                        <span></span>
+                    </label>
+
                     <div class="history-item-left">
                         <img src="{{ $item['image_url'] }}" alt="{{ $item['id'] }}">
 
@@ -82,7 +100,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6" />
                         </svg>
                     </span>
-                </a>
+                </div>
             @endforeach
         </div>
 
@@ -93,16 +111,44 @@
     </div>
 </div>
 
+<div id="deleteHistoryModal" class="delete-history-modal" hidden>
+    <div class="delete-history-backdrop" data-delete-cancel></div>
+
+    <div class="delete-history-panel" role="dialog" aria-modal="true" aria-labelledby="deleteHistoryTitle">
+        <div class="delete-history-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166M18.16 19.673A2.25 2.25 0 0 1 15.917 21H8.083a2.25 2.25 0 0 1-2.243-1.827L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .397c.34-.059.68-.114 1.022-.166m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916A2.25 2.25 0 0 0 13.5 2.25h-3A2.25 2.25 0 0 0 8.25 4.5v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+        </div>
+
+        <h2 id="deleteHistoryTitle">Delete selected history?</h2>
+        <p id="deleteHistoryMessage">This action cannot be undone.</p>
+
+        <div class="delete-history-actions">
+            <button type="button" id="cancelDeleteHistoryBtn" class="delete-modal-btn secondary">Cancel</button>
+            <button type="button" id="confirmDeleteHistoryBtn" class="delete-modal-btn primary">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const historySearch = document.getElementById('historySearch');
     const predictionFilter = document.getElementById('predictionFilter');
     const sortFilter = document.getElementById('sortFilter');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const selectAllHistory = document.getElementById('selectAllHistory');
     const historyCount = document.getElementById('historyCount');
     const historyList = document.getElementById('historyList');
     const historyEmptyState = document.getElementById('historyEmptyState');
+    const deleteHistoryModal = document.getElementById('deleteHistoryModal');
+    const deleteHistoryMessage = document.getElementById('deleteHistoryMessage');
+    const cancelDeleteHistoryBtn = document.getElementById('cancelDeleteHistoryBtn');
+    const confirmDeleteHistoryBtn = document.getElementById('confirmDeleteHistoryBtn');
     const historyCards = Array.from(document.querySelectorAll('.history-item-card'));
+    const historyCheckboxes = Array.from(document.querySelectorAll('.history-checkbox'));
     let visibleHistoryCards = [...historyCards];
+    let pendingDeleteIds = [];
 
     const normalize = (value) => value
         .toString()
@@ -159,6 +205,33 @@
         historyCount.textContent = `Showing ${visibleHistoryCards.length} of ${historyCards.length} scans`;
         historyEmptyState.hidden = visibleHistoryCards.length > 0;
         exportCsvBtn.disabled = visibleHistoryCards.length === 0;
+        updateSelectionState();
+    };
+
+    const selectedCheckboxes = () => historyCheckboxes.filter((checkbox) => checkbox.checked);
+
+    const updateSelectionState = () => {
+        const visibleCheckboxes = visibleHistoryCards
+            .map((card) => card.querySelector('.history-checkbox'))
+            .filter(Boolean);
+        const selectedVisibleCount = visibleCheckboxes.filter((checkbox) => checkbox.checked).length;
+        const selectedCount = selectedCheckboxes().length;
+
+        deleteSelectedBtn.disabled = selectedCount === 0;
+        deleteSelectedBtn.textContent = selectedCount > 0
+            ? `Delete Selected (${selectedCount})`
+            : 'Delete Selected';
+
+        if (visibleCheckboxes.length === 0) {
+            selectAllHistory.checked = false;
+            selectAllHistory.indeterminate = false;
+            selectAllHistory.disabled = true;
+            return;
+        }
+
+        selectAllHistory.disabled = false;
+        selectAllHistory.checked = selectedVisibleCount === visibleCheckboxes.length;
+        selectAllHistory.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleCheckboxes.length;
     };
 
     const escapeCsvValue = (value) => {
@@ -198,10 +271,113 @@
         URL.revokeObjectURL(url);
     };
 
+    const deleteSelectedHistory = async () => {
+        const selectedIds = pendingDeleteIds;
+
+        if (selectedIds.length === 0) return;
+
+        deleteSelectedBtn.disabled = true;
+        deleteSelectedBtn.textContent = 'Deleting...';
+        confirmDeleteHistoryBtn.disabled = true;
+        confirmDeleteHistoryBtn.textContent = 'Deleting...';
+
+        try {
+            const response = await fetch("{{ route('history.delete') }}", {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ history_ids: selectedIds }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Unable to delete selected history.');
+            }
+
+            selectedIds.forEach((id) => {
+                const card = historyCards.find((item) => item.dataset.id === id);
+                card?.remove();
+            });
+
+            window.location.reload();
+        } catch (error) {
+            alert(error.message || 'Unable to delete selected history.');
+            updateSelectionState();
+            confirmDeleteHistoryBtn.disabled = false;
+            confirmDeleteHistoryBtn.textContent = 'Delete';
+        }
+    };
+
+    const openDeleteHistoryModal = () => {
+        pendingDeleteIds = selectedCheckboxes().map((checkbox) => checkbox.value);
+
+        if (pendingDeleteIds.length === 0) return;
+
+        deleteHistoryMessage.textContent = pendingDeleteIds.length === 1
+            ? 'This will permanently delete 1 history record.'
+            : `This will permanently delete ${pendingDeleteIds.length} history records.`;
+        confirmDeleteHistoryBtn.disabled = false;
+        confirmDeleteHistoryBtn.textContent = 'Delete';
+        deleteHistoryModal.hidden = false;
+        document.body.classList.add('modal-open');
+        confirmDeleteHistoryBtn.focus();
+    };
+
+    const closeDeleteHistoryModal = () => {
+        deleteHistoryModal.hidden = true;
+        document.body.classList.remove('modal-open');
+        pendingDeleteIds = [];
+    };
+
     historySearch.addEventListener('input', updateHistory);
     predictionFilter.addEventListener('change', updateHistory);
     sortFilter.addEventListener('change', updateHistory);
     exportCsvBtn.addEventListener('click', exportVisibleRows);
+    deleteSelectedBtn.addEventListener('click', openDeleteHistoryModal);
+    confirmDeleteHistoryBtn.addEventListener('click', deleteSelectedHistory);
+    cancelDeleteHistoryBtn.addEventListener('click', closeDeleteHistoryModal);
+    deleteHistoryModal.addEventListener('click', (event) => {
+        if (event.target?.hasAttribute('data-delete-cancel')) {
+            closeDeleteHistoryModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !deleteHistoryModal.hidden) {
+            closeDeleteHistoryModal();
+        }
+    });
+    selectAllHistory.addEventListener('change', () => {
+        visibleHistoryCards.forEach((card) => {
+            const checkbox = card.querySelector('.history-checkbox');
+
+            if (checkbox) {
+                checkbox.checked = selectAllHistory.checked;
+                card.classList.toggle('is-selected', checkbox.checked);
+            }
+        });
+
+        updateSelectionState();
+    });
+    historyCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+        checkbox.addEventListener('change', () => {
+            checkbox.closest('.history-item-card')?.classList.toggle('is-selected', checkbox.checked);
+            updateSelectionState();
+        });
+    });
+    historyCards.forEach((card) => {
+        card.addEventListener('click', (event) => {
+            if (event.target.closest('.history-select')) return;
+            window.location.href = card.dataset.url;
+        });
+    });
     updateHistory();
 </script>
 @endsection

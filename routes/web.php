@@ -24,6 +24,7 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/dashboard', [ResultController::class, 'dashboard'])->name('dashboard');
     Route::view('/scan', 'pages.scan')->name('scan');
     Route::get('/history', [ResultController::class, 'history'])->name('history');
+    Route::post('/history/delete', [ResultController::class, 'deleteHistory'])->name('history.delete');
     Route::view('/settings', 'pages.settings')->name('settings');
     Route::post('/auth/session', [AuthController::class, 'updateSession'])->name('auth.session.update');
     Route::get('/result/{historyId}', [ResultController::class, 'result'])->name('result');

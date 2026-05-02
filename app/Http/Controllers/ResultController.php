@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\FirebaseService;
 use App\Services\GeminiInsightService;
+use Illuminate\Http\Request;
 use Kreait\Firebase\Factory;
 
 class ResultController extends Controller
@@ -101,6 +102,44 @@ class ResultController extends Controller
 
         return view('pages.history', [
             'historyItems' => $historyItems,
+        ]);
+    }
+
+    public function deleteHistory(Request $request)
+    {
+        $validated = $request->validate([
+            'history_ids' => ['required', 'array', 'min:1'],
+            'history_ids.*' => ['required', 'string'],
+        ]);
+
+        $ids = collect($validated['history_ids'])
+            ->map(fn ($id) => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return response()->json(['message' => 'Please select at least one history record.'], 422);
+        }
+
+        $deletedCount = 0;
+
+        foreach ($ids as $id) {
+            $record = $this->database->getReference("history/{$id}")->getValue();
+
+            if (! is_array($record) || ! $this->canUseHistoryRecord($record)) {
+                continue;
+            }
+
+            $this->database->getReference("history/{$id}")->remove();
+            $deletedCount++;
+        }
+
+        return response()->json([
+            'message' => $deletedCount === 1
+                ? 'Deleted 1 history record.'
+                : "Deleted {$deletedCount} history records.",
+            'deleted_count' => $deletedCount,
         ]);
     }
 

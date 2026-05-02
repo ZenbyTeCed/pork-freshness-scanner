@@ -12,7 +12,7 @@
                 </div>
             </a>
 
-            <nav class="porky-nav" aria-label="Primary">
+            <nav class="porky-nav {{ session()->has('firebase_uid') ? 'is-authenticated' : 'is-guest' }}" aria-label="Primary">
                 <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12 12 3l9.75 9M4.5 10.5v9a1.5 1.5 0 0 0 1.5 1.5h3.75v-6h4.5v6H18a1.5 1.5 0 0 0 1.5-1.5v-9" />
