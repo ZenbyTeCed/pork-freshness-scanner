@@ -2,107 +2,70 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-
 class GeminiInsightService
 {
     public function generateInsight(array $data): string
     {
-        if (! config('services.gemini.api_key')) {
-            return $this->fallbackInsight($data);
-        }
-
-        try {
-            $response = Http::acceptJson()
-                ->timeout(12)
-                ->withHeaders([
-                    'x-goog-api-key' => config('services.gemini.api_key'),
-                ])
-                ->post($this->endpoint(), [
-                    'contents' => [
-                        [
-                            'role' => 'user',
-                            'parts' => [
-                                ['text' => $this->prompt($data)],
-                            ],
-                        ],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.3,
-                        'maxOutputTokens' => 160,
-                    ],
-                ]);
-
-            if ($response->failed()) {
-                Log::warning('Gemini insight request failed.', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                return $this->fallbackInsight($data);
-            }
-
-            $text = $response->json('candidates.0.content.parts.0.text');
-
-            if (! is_string($text) || trim($text) === '') {
-                return $this->fallbackInsight($data);
-            }
-
-            return $this->shortenInsight($text);
-        } catch (\Throwable $exception) {
-            Log::warning('Gemini insight generation failed.', [
-                'message' => $exception->getMessage(),
-            ]);
-
-            return $this->fallbackInsight($data);
-        }
-    }
-
-    private function endpoint(): string
-    {
-        $model = config('services.gemini.model', 'gemini-2.5-flash');
-
-        return "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent";
-    }
-
-    private function prompt(array $data): string
-    {
-        return 'You are an AI assistant for a pork freshness monitoring system. Only discuss pork freshness, food quality, freshness indicators, sensor readings, and safe handling recommendations. Do not answer unrelated questions. Based on the following result data, generate a short 2-4 sentence insight. Be cautious and do not claim absolute safety. Result data: '
-            . json_encode($data, JSON_PRETTY_PRINT);
+        return $this->fallbackInsight($data);
     }
 
     public function fallbackInsight(array $data): string
     {
         $prediction = $data['prediction'] ?? null;
-        $label = $data['prediction_label'] ?? 'the selected freshness result';
-        $confidence = $data['confidence_label'] ?? 'the recorded';
+        $label = strtolower($data['prediction_label'] ?? 'the selected result');
+        $confidenceValue = $this->normalizeConfidence($data['confidence'] ?? 0);
+        $confidenceLabel = $this->formatConfidence($confidenceValue);
+        $confidenceLevel = $this->confidenceLevel($confidenceValue);
         $source = $data['source'] ?? 'upload';
 
-        $guidance = match ($prediction) {
-            'fresh' => 'The sample appears fresh, but it should still be handled properly and stored cold if not used soon.',
-            'not_fresh' => 'The sample may no longer be fresh. Further checking is recommended before making a handling decision.',
-            default => 'The freshness result should be reviewed carefully before making any handling decision.',
+        $variations = match ($prediction) {
+            'fresh' => [
+                'The image result looks reassuring, but keep the sample chilled and handle it properly.',
+                'This is a good sign from the model, especially if the meat also smells normal and was stored cold.',
+                'The sample appears to be in acceptable condition based on the image, but normal food safety checks still matter.',
+            ],
+            'not_fresh' => [
+                'The image shows signs that need caution, so it is better to inspect the sample further before using it.',
+                'This result suggests the pork may be past its best condition, especially if there are odor or texture changes.',
+                'Treat this as a warning result and check the sample carefully before making any handling decision.',
+            ],
+            default => [
+                'The result needs a careful review before making any handling decision.',
+            ],
         };
 
-        if ($source === 'esp32') {
-            $context = 'This result uses image prediction plus available sensor readings.';
-        } else {
-            $context = 'This result is based on uploaded image classification only, so sensor readings were not used.';
-        }
+        $sourceNote = $source === 'esp32'
+            ? 'This insight also considers that the scan came from the ESP32 workflow.'
+            : 'This insight is based on the uploaded image classification.';
 
-        return "This sample was classified as {$label} with {$confidence} confidence. {$context} {$guidance} This AI result is only an aid and should not replace human judgment.";
+        $firstSentence = "This sample was classified as {$label} with {$confidenceLabel} confidence, which is a {$confidenceLevel} result.";
+        $secondSentence = $variations[array_rand($variations)];
+
+        return "{$firstSentence} {$secondSentence} {$sourceNote}";
     }
 
-    private function shortenInsight(string $text): string
+    private function normalizeConfidence(mixed $confidence): float
     {
-        $cleanText = trim(preg_replace('/\s+/', ' ', strip_tags($text)));
-        $sentences = preg_split('/(?<=[.!?])\s+/', $cleanText, -1, PREG_SPLIT_NO_EMPTY);
+        $value = is_numeric($confidence) ? (float) $confidence : 0;
 
-        if (! $sentences) {
-            return $cleanText;
+        return $value > 1 ? $value / 100 : $value;
+    }
+
+    private function formatConfidence(float $confidence): string
+    {
+        return number_format($confidence * 100, 0) . '%';
+    }
+
+    private function confidenceLevel(float $confidence): string
+    {
+        if ($confidence > 0.9) {
+            return 'high confidence';
         }
 
-        return implode(' ', array_slice($sentences, 0, 4));
+        if ($confidence >= 0.7) {
+            return 'moderate confidence';
+        }
+
+        return 'lower confidence';
     }
 }

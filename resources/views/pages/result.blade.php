@@ -211,7 +211,7 @@
 
         try {
             insightNote.hidden = false;
-            insightNote.textContent = 'Generating Gemini insight...';
+            insightNote.textContent = 'Generating AI insight...';
 
             const response = await fetch("{{ route('result.ai-insight', ['historyId' => $historyId]) }}", {
                 method: 'POST',
@@ -226,12 +226,12 @@
             const data = await response.json();
 
             if (response.status === 429) {
-                insightNote.textContent = data.message || 'AI limit reached. Showing local fallback insight.';
+                insightNote.textContent = data.message || 'AI insight limit reached. Showing local insight.';
                 return;
             }
 
             if (!response.ok || !data.insight) {
-                insightNote.textContent = 'Gemini insight unavailable. Showing local fallback insight.';
+                insightNote.textContent = 'AI insight unavailable. Showing local insight.';
                 return;
             }
 
@@ -241,7 +241,7 @@
         } catch (error) {
             console.error(error);
             insightNote.hidden = false;
-            insightNote.textContent = 'Gemini insight unavailable. Showing local fallback insight.';
+            insightNote.textContent = 'AI insight unavailable. Showing local insight.';
         }
     });
 </script>

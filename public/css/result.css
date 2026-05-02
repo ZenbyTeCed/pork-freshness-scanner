@@ -526,7 +526,14 @@
 
     .indicator-item {
         align-items: flex-start;
-        padding: 12px 10px;
+        align-items: center;
+        gap: 25px;
+        padding: 12px 20px;
+        height: 45px;
+    }
+
+    .indicator-item h4 {
+        margin-top: 0;
     }
 
     .result-action-btn {
