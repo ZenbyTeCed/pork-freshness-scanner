@@ -92,7 +92,7 @@ https://dl.espressif.com/dl/package_esp32_index.json
 | Component | Connection |
 | --- | --- |
 | DHT22 DATA | GPIO 2 |
-| MQ-135 AOUT | GPIO 13 |
+| MQ-135 DO | GPIO 12 |
 | LCD SDA | GPIO 15 |
 | LCD SCL | GPIO 14 |
 | Power | 5V from regulator |
@@ -110,19 +110,6 @@ Important:
 
 - Ensure stable 5V supply
 - MQ-135 requires enough current for heater
-
----
-
-## Voltage Divider (MQ-135)
-To protect ESP32 (3.3V max), use:
-
-```text
-MQ135 AOUT -- 10k --+-- GPIO13
-                    |
-                   20k (2x10k combined)
-                    |
-                   GND
-```
 
 ---
 
