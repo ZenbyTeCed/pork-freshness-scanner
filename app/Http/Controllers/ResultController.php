@@ -356,17 +356,11 @@ class ResultController extends Controller
 
     private function formatTimestamp(mixed $timestamp): string
     {
-        if (! $timestamp) {
-            return 'N/A';
-        }
-
         if (is_numeric($timestamp) && (int) $timestamp < 1000000000) {
             return (string) $timestamp;
         }
 
-        $date = is_numeric($timestamp)
-            ? date_create('@' . ((int) $timestamp > 10000000000 ? (int) ($timestamp / 1000) : (int) $timestamp))
-            : date_create((string) $timestamp);
+        $date = $this->timestampToDate($timestamp);
 
         return $date ? $date->format('M j, Y, g:i A') : 'N/A';
     }
@@ -427,19 +421,39 @@ class ResultController extends Controller
 
     private function dateKey(mixed $timestamp): ?string
     {
-        if (! $timestamp) {
-            return null;
-        }
-
         if (is_numeric($timestamp) && (int) $timestamp < 1000000000) {
             return null;
         }
 
-        $date = is_numeric($timestamp)
-            ? date_create('@' . ((int) $timestamp > 10000000000 ? (int) ($timestamp / 1000) : (int) $timestamp))
-            : date_create((string) $timestamp);
+        $date = $this->timestampToDate($timestamp);
 
         return $date ? $date->format('Y-m-d') : null;
+    }
+
+    private function timestampToDate(mixed $timestamp): ?\DateTimeImmutable
+    {
+        if (! $timestamp) {
+            return null;
+        }
+
+        $timezone = new \DateTimeZone(config('app.timezone', 'Asia/Manila'));
+
+        if (is_numeric($timestamp)) {
+            $value = (int) $timestamp;
+            $seconds = $value > 10000000000 ? (int) ($value / 1000) : $value;
+
+            return (new \DateTimeImmutable('@' . $seconds))->setTimezone($timezone);
+        }
+
+        if (is_string($timestamp)) {
+            try {
+                return (new \DateTimeImmutable($timestamp))->setTimezone($timezone);
+            } catch (\Exception) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
 }

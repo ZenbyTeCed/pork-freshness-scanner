@@ -9,6 +9,8 @@ services:
         value: Porky
       - key: APP_ENV
         value: production
+      - key: APP_TIMEZONE
+        value: Asia/Manila
       - key: APP_DEBUG
         value: "false"
       - key: APP_KEY

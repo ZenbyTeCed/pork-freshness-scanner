@@ -30,7 +30,7 @@ class ScanController extends Controller
         $prediction = $request->string('prediction')->toString();
         $confidence = $this->normalizeConfidence((float) $request->confidence);
         $source = $request->input('source', 'upload');
-        $timestamp = now()->toISOString();
+        $timestamp = now()->toIso8601String();
 
         // Store the original uploaded image so the result page can show what was analyzed.
         $imagePath = $request->file('image')->store('scans', 'public');
@@ -63,7 +63,7 @@ class ScanController extends Controller
         $deviceId = $request->input('device_id', self::DEVICE_ID);
         $commandId = 'capture_' . Str::uuid()->toString();
         $commandPath = "commands/{$deviceId}";
-        $requestedAt = now()->toISOString();
+        $requestedAt = now()->toIso8601String();
         $requestedBy = session('firebase_uid');
 
         if (! is_string($requestedBy) || trim($requestedBy) === '') {
