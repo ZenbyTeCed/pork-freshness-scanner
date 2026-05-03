@@ -548,6 +548,12 @@
 
 @media (max-width: 480px) {
     .history-count-group {
-        width: 100%;
+        gap: 80px;
+    }
+}
+
+@media (max-width: 320px) {
+    .history-count-group {
+        gap: 90px;
     }
 }
