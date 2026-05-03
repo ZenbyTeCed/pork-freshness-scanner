@@ -27,4 +27,9 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    build: {
+        rollupOptions: {
+            preserveEntrySignatures: 'strict',
+        },
+    },
 });
