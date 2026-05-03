@@ -15,6 +15,8 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      - key: ASSET_URL
+        value: ""
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_STACK
