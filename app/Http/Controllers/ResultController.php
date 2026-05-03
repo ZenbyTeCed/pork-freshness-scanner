@@ -180,7 +180,8 @@ class ResultController extends Controller
             return true;
         }
 
-        return $this->looksLikeEsp32Record($record);
+        return $this->looksLikeEsp32Record($record)
+            && ($record['requested_by'] ?? null) === session('firebase_uid');
     }
 
     private function looksLikeEsp32Record(array $record): bool

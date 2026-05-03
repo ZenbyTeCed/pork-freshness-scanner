@@ -64,8 +64,13 @@ class ScanController extends Controller
         $commandId = 'capture_' . Str::uuid()->toString();
         $commandPath = "commands/{$deviceId}";
         $requestedAt = now()->toISOString();
-        $requestedBy = session('firebase_uid') ?: 'web';
-        $existingHistoryIds = $this->historyIds();
+        $requestedBy = session('firebase_uid');
+
+        if (! is_string($requestedBy) || trim($requestedBy) === '') {
+            return response()->json([
+                'message' => 'You must be logged in before requesting an ESP32 capture.',
+            ], 401);
+        }
 
         $command = [
             'command' => 'capture',
@@ -86,7 +91,6 @@ class ScanController extends Controller
             'saved_command' => $savedCommand,
             'is_pending_capture' => ($savedCommand['status'] ?? null) === 'pending'
                 && ($savedCommand['command'] ?? null) === 'capture',
-            'existing_history_count' => count($existingHistoryIds),
         ]);
 
         if (! $this->isSavedCaptureCommand($savedCommand, $commandId)) {
@@ -101,11 +105,11 @@ class ScanController extends Controller
             ], 500);
         }
 
-        $historyResult = $this->waitForEsp32HistoryResult($commandId, $requestedAt, $existingHistoryIds);
+        $historyResult = $this->waitForEsp32HistoryResult($commandId, $requestedBy, $requestedAt);
 
         if (! $historyResult) {
             return response()->json([
-                'message' => 'No ESP32 result was received yet. Please try again after the device finishes scanning.',
+                'message' => 'No matching ESP32 result was received yet. Please wait until the device saves this command_id and requested_by with the scan result.',
             ], 504);
         }
 
@@ -119,7 +123,7 @@ class ScanController extends Controller
             ], 422);
         }
 
-        $this->prepareEsp32HistoryRecordForResult($historyId, $historyRecord, $deviceId, $prediction);
+        $this->prepareEsp32HistoryRecordForResult($historyId, $historyRecord, $deviceId, $prediction, $commandId, $requestedBy);
 
         return response()->json([
             'history_id' => $historyId,
@@ -127,12 +131,12 @@ class ScanController extends Controller
         ]);
     }
 
-    private function waitForEsp32HistoryResult(string $commandId, string $requestedAt, array $existingHistoryIds): ?array
+    private function waitForEsp32HistoryResult(string $commandId, string $requestedBy, string $requestedAt): ?array
     {
         $deadline = microtime(true) + 60;
 
         while (microtime(true) < $deadline) {
-            $result = $this->findEsp32HistoryResult($commandId, $requestedAt, $existingHistoryIds);
+            $result = $this->findEsp32HistoryResult($commandId, $requestedBy, $requestedAt);
 
             if ($result) {
                 return $result;
@@ -144,13 +148,6 @@ class ScanController extends Controller
         return null;
     }
 
-    private function historyIds(): array
-    {
-        $history = $this->database->getReference('history')->getValue();
-
-        return is_array($history) ? array_keys($history) : [];
-    }
-
     private function isSavedCaptureCommand(mixed $savedCommand, string $commandId): bool
     {
         return is_array($savedCommand)
@@ -159,7 +156,7 @@ class ScanController extends Controller
             && ($savedCommand['status'] ?? null) === 'pending';
     }
 
-    private function findEsp32HistoryResult(string $commandId, string $requestedAt, array $existingHistoryIds): ?array
+    private function findEsp32HistoryResult(string $commandId, string $requestedBy, string $requestedAt): ?array
     {
         $path = 'history';
         $value = $this->database->getReference($path)->getValue();
@@ -171,17 +168,9 @@ class ScanController extends Controller
             ])
             ->values();
 
-        $commandMatch = $historyItems->first(fn ($item) => ($item['record']['command_id'] ?? null) === $commandId);
-        $newHistoryMatch = $historyItems
-            ->filter(fn ($item) => ! in_array($item['id'], $existingHistoryIds, true))
-            ->filter(fn ($item) => $this->hasValidPrediction($item['record']))
-            ->sortByDesc(fn ($item) => $this->historySortValue($item))
+        $match = $historyItems
+            ->filter(fn ($item) => $this->isMatchingEsp32HistoryRecord($item['record'], $commandId, $requestedBy))
             ->first();
-        $fallbackMatch = $historyItems
-            ->filter(fn ($item) => $this->isUsableEsp32HistoryRecord($item['record'], $requestedAt))
-            ->sortByDesc(fn ($item) => $this->historySortValue($item))
-            ->first();
-        $match = $commandMatch ?: $newHistoryMatch ?: $fallbackMatch;
         $prediction = $match
             ? $this->normalizePrediction($match['record']['prediction'] ?? $match['record']['classification'] ?? null)
             : null;
@@ -189,15 +178,13 @@ class ScanController extends Controller
         Log::debug('ESP32 history polling check.', [
             'path' => $path,
             'command_id' => $commandId,
+            'requested_by' => $requestedBy,
             'requested_at' => $requestedAt,
             'history_count' => is_array($value) ? count($value) : 0,
-            'existing_history_count' => count($existingHistoryIds),
             'matching_history_found' => $match !== null,
-            'matched_by_command_id' => $commandMatch !== null,
-            'matched_by_new_history_record' => $commandMatch === null && $newHistoryMatch !== null,
-            'matched_by_latest_esp32_record' => $commandMatch === null && $newHistoryMatch === null && $fallbackMatch !== null,
             'matching_history_id' => $match['id'] ?? null,
-            'matching_history_record' => $match['record'] ?? null,
+            'matching_history_has_command_id' => $match ? array_key_exists('command_id', $match['record']) : false,
+            'matching_history_has_requested_by' => $match ? array_key_exists('requested_by', $match['record']) : false,
             'has_prediction' => $prediction !== null,
             'prediction' => $prediction,
         ]);
@@ -214,41 +201,30 @@ class ScanController extends Controller
         return $this->normalizePrediction($record['prediction'] ?? $record['classification'] ?? null) !== null;
     }
 
-    private function isUsableEsp32HistoryRecord(array $record, string $requestedAt): bool
+    private function isMatchingEsp32HistoryRecord(array $record, string $commandId, string $requestedBy): bool
     {
         if (! $this->hasValidPrediction($record)) {
             return false;
         }
 
-        $source = strtolower((string) ($record['source'] ?? ''));
-        $looksLikeEsp32 = $source === 'esp32'
-            || array_key_exists('device_id', $record)
-            || array_key_exists('command_id', $record)
-            || array_key_exists('mq135', $record)
-            || array_key_exists('gas', $record)
-            || array_key_exists('temperature', $record)
-            || array_key_exists('humidity', $record);
-
-        if (! $looksLikeEsp32) {
-            return false;
-        }
-
-        $recordTime = $this->sortableTimestamp($record['timestamp'] ?? $record['created_at'] ?? null);
-        $requestTime = $this->sortableTimestamp($requestedAt);
-
-        return $recordTime === 0 || $recordTime >= $requestTime - 5;
+        return ($record['command_id'] ?? null) === $commandId
+            && ($record['requested_by'] ?? null) === $requestedBy;
     }
 
-    private function historySortValue(array $item): int|string
+    private function prepareEsp32HistoryRecordForResult(
+        string $historyId,
+        array $record,
+        string $deviceId,
+        string $prediction,
+        string $commandId,
+        string $requestedBy
+    ): void
     {
-        $timestamp = $this->sortableTimestamp($item['record']['timestamp'] ?? $item['record']['created_at'] ?? null);
-
-        return $timestamp > 0 ? $timestamp : $item['id'];
-    }
-
-    private function prepareEsp32HistoryRecordForResult(string $historyId, array $record, string $deviceId, string $prediction): void
-    {
-        $updates = [];
+        $updates = [
+            'command_id' => $commandId,
+            'requested_by' => $requestedBy,
+            'user_id' => $requestedBy,
+        ];
 
         if (! array_key_exists('source', $record)) {
             $updates['source'] = 'esp32';
@@ -290,19 +266,6 @@ class ScanController extends Controller
             'not_fresh' => 'not_fresh',
             default => null,
         };
-    }
-
-    private function sortableTimestamp(mixed $timestamp): int
-    {
-        if (is_numeric($timestamp)) {
-            return (int) $timestamp;
-        }
-
-        if (is_string($timestamp)) {
-            return strtotime($timestamp) ?: 0;
-        }
-
-        return 0;
     }
 
     private function normalizeConfidence(float $confidence): float
