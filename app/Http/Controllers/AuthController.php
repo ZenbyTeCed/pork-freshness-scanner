@@ -102,6 +102,11 @@ class AuthController extends Controller
         ]);
     }
 
+    public function sessionCheck()
+    {
+        return response()->json(session()->all());
+    }
+
     public function logout(Request $request)
     {
 

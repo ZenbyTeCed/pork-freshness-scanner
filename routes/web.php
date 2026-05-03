@@ -2,13 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\ScanController;
-use App\Services\FirebaseService;
 
-Route::get('/', function () {
-    return view('pages.home');
-})->name('home');
+Route::view('/', 'pages.home')->name('home');
+Route::get('/health', HealthController::class)->name('health');
 
 Route::middleware('firebase.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -36,11 +35,5 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/api/latest-scan', [ResultController::class, 'latest']);
 });
 
-Route::get('/session-check', function () {
-    return response()->json(session()->all());
-});
-
-
-Route::get('/test-firebase', function (FirebaseService $firebase) {
-    return response()->json($firebase->getLatestScan());
-});
+Route::get('/session-check', [AuthController::class, 'sessionCheck']);
+Route::get('/test-firebase', [ResultController::class, 'testFirebase']);

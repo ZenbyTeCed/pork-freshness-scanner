@@ -16,10 +16,10 @@
 
     <script>
         window.firebaseConfig = {
-            apiKey: "{{ env('FIREBASE_API_KEY') }}",
-            authDomain: "{{ env('FIREBASE_AUTH_DOMAIN') }}",
-            projectId: "{{ env('FIREBASE_PROJECT_ID') }}",
-            appId: "{{ env('FIREBASE_APP_ID') }}"
+            apiKey: "{{ config('services.firebase.api_key') }}",
+            authDomain: "{{ config('services.firebase.auth_domain') }}",
+            projectId: "{{ config('services.firebase.project_id') }}",
+            appId: "{{ config('services.firebase.app_id') }}"
         };
     </script>
 

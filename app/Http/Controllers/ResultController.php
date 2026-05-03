@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FirebaseDatabaseFactory;
 use App\Services\FirebaseService;
 use App\Services\GeminiInsightService;
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
 
 class ResultController extends Controller
 {
@@ -13,16 +13,15 @@ class ResultController extends Controller
     protected FirebaseService $firebaseService;
     protected GeminiInsightService $geminiInsightService;
 
-    public function __construct(FirebaseService $firebaseService, GeminiInsightService $geminiInsightService)
+    public function __construct(
+        FirebaseService $firebaseService,
+        GeminiInsightService $geminiInsightService,
+        FirebaseDatabaseFactory $firebase
+    )
     {
         $this->firebaseService = $firebaseService;
         $this->geminiInsightService = $geminiInsightService;
-
-        $factory = (new Factory)
-            ->withServiceAccount(base_path('firebase-credentials.json.json'))
-            ->withDatabaseUri(config('services.firebase.database_url'));
-
-        $this->database = $factory->createDatabase();
+        $this->database = $firebase->create();
     }
 
     public function result(string $historyId)
@@ -156,6 +155,11 @@ class ResultController extends Controller
         return response()
             ->json($latestScan)
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    }
+
+    public function testFirebase()
+    {
+        return response()->json($this->firebaseService->getLatestScan());
     }
 
     private function getUserHistoryItems()

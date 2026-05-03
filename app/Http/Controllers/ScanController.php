@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FirebaseDatabaseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Kreait\Firebase\Factory;
 
 class ScanController extends Controller
 {
@@ -13,13 +13,9 @@ class ScanController extends Controller
 
     protected $database;
 
-    public function __construct()
+    public function __construct(FirebaseDatabaseFactory $firebase)
     {
-        $factory = (new Factory)
-            ->withServiceAccount(base_path('firebase-credentials.json.json'))
-            ->withDatabaseUri(config('services.firebase.database_url'));
-
-        $this->database = $factory->createDatabase();
+        $this->database = $firebase->create();
     }
 
     public function uploadImage(Request $request)

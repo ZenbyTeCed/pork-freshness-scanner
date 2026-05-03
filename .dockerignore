@@ -1,0 +1,16 @@
+.git
+.github
+.vscode
+.env
+.env.*
+node_modules
+vendor
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+public/build
+public/hot
+firebase-credentials*.json
+npm-debug.log
+yarn-error.log
