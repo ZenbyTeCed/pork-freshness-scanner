@@ -30,7 +30,9 @@ class FirebaseDatabaseFactory
             $credentials = json_decode($credentialsJson, true);
 
             if (! is_array($credentials)) {
-                throw new RuntimeException('FIREBASE_CREDENTIALS_JSON is not valid JSON.');
+                throw new RuntimeException(
+                    'FIREBASE_CREDENTIALS_JSON is not valid JSON. In Render, paste the raw JSON without outer quotes.'
+                );
             }
 
             return $credentials;
@@ -42,6 +44,8 @@ class FirebaseDatabaseFactory
             return $credentialsPath;
         }
 
-        throw new RuntimeException('Set FIREBASE_CREDENTIALS_JSON or FIREBASE_CREDENTIALS_PATH in your .env file.');
+        throw new RuntimeException(
+            'Set FIREBASE_CREDENTIALS_JSON in Render, or set FIREBASE_CREDENTIALS_PATH/FIREBASE_CREDENTIALS to a readable credentials file path.'
+        );
     }
 }

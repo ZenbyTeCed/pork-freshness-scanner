@@ -13,6 +13,10 @@ export DB_DATABASE="${DB_DATABASE:-/tmp/database.sqlite}"
 export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
 export LOG_STACK="${LOG_STACK:-stderr}"
 
+if [ -z "${FIREBASE_CREDENTIALS_JSON:-}" ] && [ -z "${FIREBASE_CREDENTIALS_PATH:-}" ] && [ -z "${FIREBASE_CREDENTIALS:-}" ]; then
+    echo "Warning: Firebase service credentials are not set. Protected Firebase pages may return 500 until FIREBASE_CREDENTIALS_JSON is added in Render."
+fi
+
 mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache "$(dirname "$DB_DATABASE")"
 chmod -R 775 storage bootstrap/cache
 touch "$DB_DATABASE"

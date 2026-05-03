@@ -41,7 +41,7 @@ return [
         'project_id' => env('FIREBASE_PROJECT_ID'),
         'app_id' => env('FIREBASE_APP_ID'),
         'credentials_json' => env('FIREBASE_CREDENTIALS_JSON'),
-        'credentials_path' => env('FIREBASE_CREDENTIALS_PATH'),
+        'credentials_path' => env('FIREBASE_CREDENTIALS_PATH', env('FIREBASE_CREDENTIALS')),
         'database_url' => env(
             'FIREBASE_DATABASE_URL',
             'https://porkyy-default-rtdb.asia-southeast1.firebasedatabase.app'
