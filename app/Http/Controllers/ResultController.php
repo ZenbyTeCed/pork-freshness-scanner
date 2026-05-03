@@ -58,20 +58,22 @@ class ResultController extends Controller
         ]);
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $historyItems = $this->getUserHistoryItems();
-        $totalScans = $historyItems->count();
+        $filter = $this->dashboardFilter($request);
+        $filteredHistoryItems = $this->filterHistoryItemsByDate($historyItems, $filter);
+        $totalScans = $filteredHistoryItems->count();
         $today = now()->toDateString();
         $scansToday = $historyItems
             ->filter(fn ($record) => $this->dateKey($record['timestamp']) === $today)
             ->count();
         $averageConfidence = $totalScans > 0
-            ? round($historyItems->avg('confidence'), 1)
+            ? round($filteredHistoryItems->avg('confidence'), 1)
             : 0;
         $predictionCounts = [
-            $historyItems->where('prediction', 'fresh')->count(),
-            $historyItems->where('prediction', 'not_fresh')->count(),
+            $filteredHistoryItems->where('prediction', 'fresh')->count(),
+            $filteredHistoryItems->where('prediction', 'not_fresh')->count(),
         ];
         $predictionLabels = ['Fresh', 'Not Fresh'];
         $predictionSummary = collect($predictionLabels)
@@ -92,7 +94,8 @@ class ResultController extends Controller
             'predictionCounts' => $predictionCounts,
             'predictionLabels' => $predictionLabels,
             'predictionSummary' => $predictionSummary,
-            'recentActivities' => $historyItems->take(5),
+            'recentActivities' => $filteredHistoryItems->take(5),
+            'dashboardFilter' => $filter,
         ]);
     }
 
@@ -454,6 +457,64 @@ class ResultController extends Controller
         }
 
         return null;
+    }
+
+    private function dashboardFilter(Request $request): array
+    {
+        $range = $request->query('range', 'all');
+        $range = in_array($range, ['all', 'today', '7_days', '1_month', 'custom'], true) ? $range : 'all';
+        $selectedDate = is_string($request->query('date')) ? $request->query('date') : null;
+
+        if (! is_string($selectedDate) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $selectedDate)) {
+            $selectedDate = now()->toDateString();
+        }
+
+        $labels = [
+            'all' => 'All time',
+            'today' => 'Today',
+            '7_days' => 'Last 7 days',
+            '1_month' => 'Last 1 month',
+            'custom' => date_create($selectedDate)?->format('M j, Y') ?? 'Selected date',
+        ];
+
+        return [
+            'range' => $range,
+            'date' => $selectedDate,
+            'label' => $labels[$range],
+        ];
+    }
+
+    private function filterHistoryItemsByDate($historyItems, array $filter)
+    {
+        $range = $filter['range'];
+
+        if ($range === 'all') {
+            return $historyItems;
+        }
+
+        $now = now();
+        [$start, $end] = match ($range) {
+            'today' => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            '7_days' => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
+            '1_month' => [$now->copy()->subMonth()->startOfDay(), $now->copy()->endOfDay()],
+            'custom' => [
+                date_create($filter['date'])?->setTime(0, 0, 0),
+                date_create($filter['date'])?->setTime(23, 59, 59),
+            ],
+            default => [null, null],
+        };
+
+        if (! $start || ! $end) {
+            return $historyItems;
+        }
+
+        return $historyItems
+            ->filter(function ($record) use ($start, $end) {
+                $date = $this->timestampToDate($record['timestamp'] ?? null);
+
+                return $date && $date >= $start && $date <= $end;
+            })
+            ->values();
     }
 
 }

@@ -4,8 +4,25 @@
 <div class="dashboard-page">
     <div class="dashboard-container">
         <div class="dashboard-header">
-            <h1>Dashboard</h1>
-            <p>Monitor real-time pork freshness analytics</p>
+            <div>
+                <h1>Dashboard</h1>
+                <p>Monitor real-time pork freshness analytics</p>
+            </div>
+
+            <form method="GET" action="{{ route('dashboard') }}" class="dashboard-filter">
+                <div class="filter-tabs" role="group" aria-label="Dashboard date range">
+                    <button type="submit" name="range" value="all" class="{{ $dashboardFilter['range'] === 'all' ? 'active' : '' }}">All</button>
+                    <button type="submit" name="range" value="today" class="{{ $dashboardFilter['range'] === 'today' ? 'active' : '' }}">Today</button>
+                    <button type="submit" name="range" value="7_days" class="{{ $dashboardFilter['range'] === '7_days' ? 'active' : '' }}">7 days</button>
+                    <button type="submit" name="range" value="1_month" class="{{ $dashboardFilter['range'] === '1_month' ? 'active' : '' }}">1 month</button>
+                </div>
+
+                <label class="filter-date">
+                    <span>Select date</span>
+                    <input type="date" name="date" value="{{ $dashboardFilter['date'] }}" max="{{ now()->toDateString() }}">
+                    <button type="submit" name="range" value="custom" class="{{ $dashboardFilter['range'] === 'custom' ? 'active' : '' }}">Apply</button>
+                </label>
+            </form>
         </div>
 
         <div class="stats-grid">
@@ -16,7 +33,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 7V5a2 2 0 0 1 2-2h2M3 17v2a2 2 0 0 0 2 2h2M17 3h2a2 2 0 0 1 2 2v2M17 21h2a2 2 0 0 0 2-2v-2M7 7h.01M7 12h.01M7 17h.01M12 7h.01M12 12h.01M12 17h.01M17 7h.01M17 12h.01M17 17h.01" />
                         </svg>
                     </div>
-                    <span class="stat-badge green">All time</span>
+                    <span class="stat-badge green">{{ $dashboardFilter['label'] }}</span>
                 </div>
                 <h2>{{ $totalScans }}</h2>
                 <p>Total Scans</p>

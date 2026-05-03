@@ -9,6 +9,14 @@
     margin: 0 auto;
 }
 
+.dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
 .dashboard-header h1 {
     font-size: 36px;
     font-weight: 700;
@@ -19,7 +27,73 @@
 .dashboard-header p {
     font-size: 14px;
     color: #64748b;
-    margin-bottom: 30px;
+    margin: 0;
+}
+
+.dashboard-filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-tabs {
+    display: inline-flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.filter-tabs button,
+.filter-date button {
+    min-height: 28px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 9px;
+    background: transparent;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filter-tabs button.active,
+.filter-date button.active,
+.filter-tabs button:hover,
+.filter-date button:hover {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.filter-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.filter-date span {
+    padding-left: 6px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.filter-date input {
+    min-height: 28px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 6px;
+    background: #f8fafc;
+    color: #0f172a;
+    font: inherit;
+    font-size: 12px;
 }
 
 .stats-grid {
@@ -337,6 +411,39 @@
 
     .dashboard-page {
         padding-top: 20px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .dashboard-filter {
+        width: 100%;
+        gap: 6px;
+    }
+
+    .filter-tabs,
+    .filter-date {
+        width: auto;
+    }
+
+    .filter-tabs {
+        display: grid;
+        flex: 1 1 190px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .filter-date {
+        flex: 1 1 170px;
+    }
+
+    .filter-date span {
+        display: none;
+    }
+
+    .filter-date input {
+        width: 100%;
     }
 
     .stats-grid {
