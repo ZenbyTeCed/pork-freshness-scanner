@@ -4,10 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\ScanImageController;
 use App\Http\Controllers\ScanController;
 
 Route::view('/', 'pages.home')->name('home');
 Route::get('/health', HealthController::class)->name('health');
+Route::get('/storage/scans/{filename}', [ScanImageController::class, 'show'])->where('filename', '[^/]+');
 
 Route::middleware('firebase.guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

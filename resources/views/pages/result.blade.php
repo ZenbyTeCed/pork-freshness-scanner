@@ -27,7 +27,7 @@
                         <h2>Sample Image</h2>
 
                         <div class="result-image-wrap">
-                            <img src="{{ $result['image_url'] }}" alt="Pork sample used for analysis">
+                            <img src="{{ $result['image_url'] }}" alt="Pork sample used for analysis" data-fallback-image="/images/Porky%20Logo.png">
                         </div>
                     </div>
                 @endunless

@@ -102,7 +102,7 @@
             @forelse ($recentActivities as $activity)
                 <a href="{{ route('result', ['historyId' => $activity['id']]) }}" class="activity-row">
                     <div class="activity-left">
-                        <img src="{{ $activity['image_url'] }}" alt="Pork sample">
+                        <img src="{{ $activity['image_url'] }}" alt="Pork sample" data-fallback-image="/images/Porky%20Logo.png">
 
                         <div class="activity-info">
                             <div class="activity-top">

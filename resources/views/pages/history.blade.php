@@ -76,7 +76,7 @@
                     </label>
 
                     <div class="history-item-left">
-                        <img src="{{ $item['image_url'] }}" alt="{{ $item['id'] }}">
+                        <img src="{{ $item['image_url'] }}" alt="{{ $item['id'] }}" data-fallback-image="/images/Porky%20Logo.png">
 
                         <div class="history-item-content">
                             <div class="history-item-top">

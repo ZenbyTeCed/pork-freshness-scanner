@@ -199,6 +199,16 @@
 
     const porkyNav = document.querySelector('.porky-nav');
 
+    document.querySelectorAll('img[data-fallback-image]').forEach((image) => {
+        image.addEventListener('error', () => {
+            const fallback = image.getAttribute('data-fallback-image');
+
+            if (fallback && image.src !== new URL(fallback, window.location.origin).href) {
+                image.src = fallback;
+            }
+        }, { once: true });
+    });
+
     if (porkyNav && window.matchMedia('(max-width: 1024px)').matches) {
         let lastScrollY = window.scrollY;
         let ticking = false;
