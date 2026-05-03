@@ -190,8 +190,8 @@
     window.Module = {
         locateFile(path) {
             return path.endsWith('.wasm')
-                ? "{{ asset('js/edge-impulse/edge-impulse-standalone.wasm') }}"
-                : "{{ asset('js/edge-impulse') }}/" + path;
+                ? "/js/edge-impulse/edge-impulse-standalone.wasm"
+                : "/js/edge-impulse/" + path;
         }
     };
     window.scanRoutes = {
@@ -200,7 +200,7 @@
         csrfToken: "{{ csrf_token() }}"
     };
 </script>
-<script src="{{ asset('js/edge-impulse/edge-impulse-standalone.js') }}"></script>
-<script src="{{ asset('js/edge-impulse/run-impulse.js') }}"></script>
-<script src="{{ asset('js/edge-impulse/scan-classifier.js') }}"></script>
+<script src="/js/edge-impulse/edge-impulse-standalone.js"></script>
+<script src="/js/edge-impulse/run-impulse.js"></script>
+<script src="/js/edge-impulse/scan-classifier.js"></script>
 @endsection

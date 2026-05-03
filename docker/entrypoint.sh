@@ -13,7 +13,7 @@ export DB_DATABASE="${DB_DATABASE:-/tmp/database.sqlite}"
 export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
 export LOG_STACK="${LOG_STACK:-stderr}"
 
-if [ -z "${APP_URL:-}" ] && [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
+if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
     export APP_URL="$RENDER_EXTERNAL_URL"
 fi
 

@@ -241,7 +241,7 @@ class ResultController extends Controller
             return asset('storage/' . $imagePath);
         }
 
-        return asset('images/Porky Logo.png');
+        return '/images/Porky%20Logo.png';
     }
 
     private function sourceFromRecord(array $record): string

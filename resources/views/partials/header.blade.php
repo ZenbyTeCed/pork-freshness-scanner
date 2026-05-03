@@ -4,7 +4,7 @@
 
             <a href="{{ route('home') }}" class="porky-brand">
                 <div class="porky-logo">
-                    <img src="{{ asset('images/Porky Logo.png') }}" alt="PORKY Logo">
+                    <img src="/images/Porky%20Logo.png" alt="PORKY Logo">
                 </div>
                 <div class="porky-title">
                     <h1>PORKY</h1>
