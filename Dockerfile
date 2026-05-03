@@ -1,36 +1,27 @@
-FROM node:20-bookworm AS frontend
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
 FROM php:8.2-cli
 
 WORKDIR /var/www/html
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    libsqlite3-dev \
+    curl \
     libzip-dev \
     zip \
-    && docker-php-ext-install pdo_sqlite zip \
+    nodejs \
+    npm \
+    && docker-php-ext-install zip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
-COPY --from=frontend /app/public/build ./public/build
 
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
-    && chmod +x docker/entrypoint.sh \
-    && chmod -R 775 storage bootstrap/cache \
-    && test -d public/build
+RUN composer install --optimize-autoloader --no-dev
+RUN npm ci && npm run build
+RUN php artisan config:clear
+RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD ["sh", "docker/entrypoint.sh"]
+CMD ["sh", "-c", "touch ${DB_DATABASE:-/tmp/database.sqlite} && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
