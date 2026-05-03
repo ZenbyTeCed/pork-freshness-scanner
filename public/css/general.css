@@ -18,6 +18,10 @@ a {
     text-decoration: none;
 }
 
+.porky-main {
+    padding-bottom: 0 !important;
+}
+
 .app-toast-container {
     position: fixed;
     top: 28px;
@@ -632,7 +636,11 @@ body.modal-open {
     }
 
     .porky-brand {
-        gap: 10px;
+        gap: 2px;
+    }
+
+    .porky-brand h1 {
+        font-size: 15px !important;
     }
 
     .porky-logo {

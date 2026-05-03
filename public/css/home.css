@@ -358,8 +358,31 @@
         font-size: 15px;
     }
 
+    .porky-feature-card {
+        min-height: 0;
+        padding: 20px 20px;
+        border-radius: 16px;
+    }
+
+    .porky-feature-icon {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 14px;
+        border-radius: 12px;
+    }
+
+    .porky-feature-card h3 {
+        margin-bottom: 8px;
+        font-size: 17px;
+    }
+
+    .porky-feature-card p {
+        line-height: 1.5;
+    }
+
     .porky-features-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
     }
 
     .porky-disclaimer-card {

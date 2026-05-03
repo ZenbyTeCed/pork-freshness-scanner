@@ -8,7 +8,6 @@
                 </div>
                 <div class="porky-title">
                     <h1>PORKY</h1>
-                    <p>AI Freshness Grading</p>
                 </div>
             </a>
 

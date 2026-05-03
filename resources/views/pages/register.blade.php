@@ -11,7 +11,7 @@
                     <div class="porky-auth-brand-mark">P</div>
                     <div>
                         <h1 class="porky-auth-brand-title">PORKY</h1>
-                        <p class="porky-auth-brand-subtitle">AI Freshness Grading</p>
+                        <p class="porky-auth-brand-subtitle">AI Freshness Detection</p>
                     </div>
                 </div>
 

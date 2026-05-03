@@ -68,6 +68,7 @@
     display: flex;
     align-items: center;
     padding: 60px 0;
+    padding-bottom: 100px !important;
     background: #f8f8f8;
 }
 
@@ -188,7 +189,7 @@
 }
 
 .porky-form-group input {
-    width: 93%;
+    width: 100%;
     padding: 14px 16px;
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -405,6 +406,7 @@
 
     .porky-auth-brand-title {
         font-size: 32px;
+        text-align: left;
     }
 
     .porky-auth-brand-subtitle {
@@ -412,11 +414,11 @@
     }
 
     .porky-auth-showcase-text h2 {
-        font-size: 36px;
+        font-size: 32px;
     }
 
     .porky-auth-showcase-text p {
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .porky-auth-card {

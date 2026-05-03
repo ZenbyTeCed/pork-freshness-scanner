@@ -251,6 +251,12 @@ input:disabled {
         grid-template-columns: 1fr;
     }
 
+    #fullName,
+    #newPassword,
+    #confirmPassword {
+        width: 90%;
+    }
+
     .settings-actions {
         justify-content: stretch;
     }

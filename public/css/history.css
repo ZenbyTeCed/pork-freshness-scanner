@@ -545,3 +545,9 @@
         align-self: flex-end;
     }
 }
+
+@media (max-width: 480px) {
+    .history-count-group {
+        width: 100%;
+    }
+}
