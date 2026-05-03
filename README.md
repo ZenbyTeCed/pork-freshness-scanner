@@ -1,4 +1,4 @@
-# 🐷 PORKY - Pork Freshness Grading System
+# 🐷 PORKY - Pork Freshness Detection System
 
 ## 📌 Description
 PORKY is an AI-based pork freshness grading system that uses an ESP32-CAM and edge machine learning to analyze pork images and classify freshness based on visible characteristics.
@@ -56,8 +56,7 @@ npm install
 - Voltage Regulator (set to 5V)
 - Breadboard
 - Jumper Wires
-- Resistors:
-  - 3 x 10k ohm (used for voltage divider and pull-up)
+- Logic Level Converter
 
 ---
 
@@ -147,5 +146,6 @@ MQ135 AOUT -- 10k --+-- GPIO13
 | Display | Meaning |
 | --- | --- |
 | FRESH | Meat is fresh |
-| SPOILED | Meat is spoiled |
+| NOT FRESH | Meat is not fresh |
 | WARN:TEMP | Temperature is high |
+| FROZEN | Possible frozen |
