@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\ScanImageUrl;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -91,19 +92,7 @@ class FirebaseService
 
     private function imageUrlFromScan(array $scan): ?string
     {
-        $imageUrl = $scan['image_url'] ?? null;
-
-        if (is_string($imageUrl) && trim($imageUrl) !== '' && strtoupper(trim($imageUrl)) !== 'N/A') {
-            return $imageUrl;
-        }
-
-        $imagePath = $scan['image_path'] ?? null;
-
-        if (is_string($imagePath) && trim($imagePath) !== '' && strtoupper(trim($imagePath)) !== 'N/A') {
-            return asset('storage/' . $imagePath);
-        }
-
-        return null;
+        return ScanImageUrl::fromRecord($scan);
     }
 
     private function sortableTimestamp(mixed $createdAt): int

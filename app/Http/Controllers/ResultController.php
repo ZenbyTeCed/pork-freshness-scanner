@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\FirebaseDatabaseFactory;
 use App\Services\FirebaseService;
 use App\Services\GeminiInsightService;
+use App\Support\ScanImageUrl;
 use Illuminate\Http\Request;
 
 class ResultController extends Controller
@@ -229,19 +230,7 @@ class ResultController extends Controller
 
     private function imageUrlFromRecord(array $record): string
     {
-        $imageUrl = $record['image_url'] ?? null;
-
-        if (is_string($imageUrl) && trim($imageUrl) !== '' && strtoupper(trim($imageUrl)) !== 'N/A') {
-            return $imageUrl;
-        }
-
-        $imagePath = $record['image_path'] ?? null;
-
-        if (is_string($imagePath) && trim($imagePath) !== '' && strtoupper(trim($imagePath)) !== 'N/A') {
-            return asset('storage/' . $imagePath);
-        }
-
-        return '/images/Porky%20Logo.png';
+        return ScanImageUrl::fromRecord($record, '/images/Porky%20Logo.png');
     }
 
     private function sourceFromRecord(array $record): string

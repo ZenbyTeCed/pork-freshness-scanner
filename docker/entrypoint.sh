@@ -24,6 +24,7 @@ fi
 mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache "$(dirname "$DB_DATABASE")"
 chmod -R 775 storage bootstrap/cache
 touch "$DB_DATABASE"
+php artisan storage:link || true
 
 echo "Clearing old Laravel caches..."
 php artisan config:clear

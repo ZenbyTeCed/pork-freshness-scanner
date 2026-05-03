@@ -39,7 +39,7 @@ class ScanController extends Controller
             'user_id' => session('firebase_uid'),
             'source' => $source,
             'image_path' => $imagePath,
-            'image_url' => asset('storage/' . $imagePath),
+            'image_url' => '/storage/' . $imagePath,
             'prediction' => $prediction,
             'confidence' => $confidence,
             'recommendation' => $this->recommendationFromPrediction($prediction),
