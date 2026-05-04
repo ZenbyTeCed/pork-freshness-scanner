@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Dashboard analytics page --}}
 <div class="dashboard-page">
     <div class="dashboard-container">
         <div class="dashboard-header">
@@ -25,6 +26,7 @@
             </form>
         </div>
 
+        {{-- Summary statistic cards --}}
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-top">
@@ -79,6 +81,7 @@
             </div>
         </div>
 
+        {{-- Freshness charts --}}
         <div class="charts-grid">
             <div class="chart-card">
                 <h3>Freshness Distribution</h3>
@@ -110,6 +113,7 @@
             </div>
         </div>
 
+        {{-- Recent scan activity --}}
         <div class="recent-card">
             <div class="recent-header">
                 <h3>Recent Activity</h3>
@@ -145,6 +149,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Builds dashboard charts from controller data.
     const chartLabels = @json($predictionLabels);
     const chartData = @json($predictionCounts);
     const commonColors = ['#22c55e', '#ef4444'];

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{-- Auth layout head --}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Porky</title>
@@ -14,6 +15,7 @@
 </head>
 <body class="porky-body">
 
+    {{-- Firebase settings for auth pages --}}
     <script>
         window.firebaseConfig = {
             apiKey: "{{ config('services.firebase.api_key') }}",
@@ -23,12 +25,15 @@
         };
     </script>
 
+    {{-- Shared navigation header --}}
     @include('partials.header')
 
+    {{-- Auth page content slot --}}
     <main class="porky-main">
         @yield('content')
     </main>
 
+    {{-- Simple auth footer --}}
     <footer class="porky-auth-footer">
         <div class="porky-container">
             <p>&copy; {{ now()->year }} PORKY. All rights reserved.</p>
@@ -36,6 +41,7 @@
     </footer>
 
 <script type="module">
+// Handles auth navigation and logout behavior.
 import { auth } from "{{ Vite::asset('resources/js/auth.js') }}";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {{-- Main app layout head --}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -22,6 +23,7 @@
 </head>
 <body class="porky-body">
 
+    {{-- Firebase settings for frontend scripts --}}
     <script>
         window.firebaseConfig = {
             apiKey: "{{ config('services.firebase.api_key') }}",
@@ -31,14 +33,18 @@
         };
     </script>
 
+    {{-- Shared navigation header --}}
     @include('partials.header')
 
+    {{-- Page content slot --}}
     <main class="porky-main">
         @yield('content')
     </main>
 
+    {{-- Shared footer --}}
     @include('partials.footer')
 
+    {{-- Logout confirmation modal --}}
     <div id="logoutConfirmModal" class="logout-confirm-modal" hidden>
         <div class="logout-confirm-backdrop" data-logout-cancel></div>
 
@@ -60,6 +66,7 @@
     </div>
 
 <script type="module">
+    // Handles logout, mobile menu, and image fallback behavior.
     import { auth } from "{{ Vite::asset('resources/js/auth.js') }}";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 

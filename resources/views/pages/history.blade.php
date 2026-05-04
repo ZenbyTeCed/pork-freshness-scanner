@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Scan history page --}}
 <div class="history-page">
     <div class="history-container">
         <div class="history-header">
@@ -8,6 +9,7 @@
             <p>View uploaded image and ESP32-CAM freshness analysis records</p>
         </div>
 
+        {{-- Search, filter, and sort controls --}}
         <div class="history-filter-card">
             <div class="history-filters">
                 <div class="filter-box search-box">
@@ -34,6 +36,7 @@
             </div>
         </div>
 
+        {{-- History list actions --}}
         <div class="history-toolbar">
             <div class="history-count-group">
                 <p id="historyCount">Showing {{ count($historyItems) }} of {{ count($historyItems) }} scans</p>
@@ -55,6 +58,7 @@
             </div>
         </div>
 
+        {{-- Scan history records --}}
         <div class="history-list" id="historyList">
             @foreach ($historyItems as $item)
                 <div
@@ -111,6 +115,7 @@
     </div>
 </div>
 
+{{-- Delete history confirmation modal --}}
 <div id="deleteHistoryModal" class="delete-history-modal" hidden>
     <div class="delete-history-backdrop" data-delete-cancel></div>
 
@@ -132,6 +137,7 @@
 </div>
 
 <script>
+    // Handles history search, sorting, export, and deletion.
     const historySearch = document.getElementById('historySearch');
     const predictionFilter = document.getElementById('predictionFilter');
     const sortFilter = document.getElementById('sortFilter');

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Hero section --}}
 <section class="porky-hero">
     <div class="porky-container">
         <div class="porky-hero-content">
@@ -42,6 +43,7 @@
     </div>
 </section>
 
+{{-- Process steps section --}}
 <section class="porky-section">
     <div class="porky-container">
         <div class="porky-section-heading">
@@ -93,6 +95,7 @@
     </div>
 </section>
 
+{{-- Feature overview section --}}
 <section class="porky-section porky-section-alt">
     <div class="porky-container">
         <div class="porky-section-heading">
@@ -152,6 +155,7 @@
     </div>
 </section>
 
+{{-- System disclaimer section --}}
 <section class="porky-section">
     <div class="porky-container">
         <div class="porky-disclaimer-card">

@@ -1,11 +1,12 @@
 @extends('layouts.default')
 
 @section('content')
+{{-- Registration page layout --}}
 <section class="porky-auth-section">
     <div class="porky-container">
         <div class="porky-auth-layout porky-auth-layout-wide">
 
-            <!-- LEFT SIDE -->
+            {{-- Branding panel --}}
             <div class="porky-auth-showcase">
                 <div class="porky-auth-branding">
                     <div class="porky-auth-brand-mark">P</div>
@@ -24,7 +25,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT SIDE -->
+            {{-- Registration form panel --}}
             <div class="porky-auth-wrapper porky-auth-wrapper-wide">
                 <div class="porky-auth-card">
 
@@ -73,6 +74,7 @@
 @endsection
 
 <script type="module">
+// Handles Firebase registration and app session login.
 import { registerUser } from "{{ Vite::asset('resources/js/auth.js') }}";
 
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {

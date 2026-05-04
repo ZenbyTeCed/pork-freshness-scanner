@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Scan capture page --}}
 <div class="scan-page">
     <div class="scan-container">
         <div class="scan-header">
@@ -8,6 +9,7 @@
             <p>Capture or upload an image for AI freshness analysis</p>
         </div>
 
+        {{-- Capture and preview panels --}}
         <div class="scan-grid">
             <div class="scan-left">
                 <div class="scan-card">
@@ -153,6 +155,7 @@
     </div>
 </div>
 
+{{-- ESP32 capture confirmation modal --}}
 <div class="esp32-modal" id="esp32ReadyModal" hidden>
     <div class="esp32-modal-backdrop" data-esp32-close></div>
 
@@ -187,6 +190,7 @@
 </div>
 
 <script>
+    // Provides Edge Impulse and scan route settings.
     window.Module = {
         locateFile(path) {
             return path.endsWith('.wasm')

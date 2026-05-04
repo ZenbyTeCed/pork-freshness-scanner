@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Account settings page --}}
 <div class="settings-page">
     <div class="settings-container">
 
@@ -11,6 +12,7 @@
 
         <div class="settings-content">
 
+            {{-- Profile and security form --}}
             <div class="settings-section active" id="profileSection">
                 <form id="profileSettingsForm">
                     <div class="settings-card">
@@ -76,6 +78,7 @@
 </div>
 
 <script type="module">
+    // Handles profile updates and password changes.
     import { auth } from "{{ Vite::asset('resources/js/auth.js') }}";
     import {
         EmailAuthProvider,

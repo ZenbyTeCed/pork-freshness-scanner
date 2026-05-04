@@ -1,6 +1,7 @@
 @extends('layouts.default')
 
 @section('content')
+{{-- Login page layout --}}
 <section class="porky-auth-section">
     <div class="porky-container">
         <div class="porky-auth-layout">
@@ -71,6 +72,7 @@
 @endsection
 
 <script type="module">
+// Handles email and Google login.
 import { loginUser, loginWithGoogle } from "{{ Vite::asset('resources/js/auth.js') }}";
 
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {

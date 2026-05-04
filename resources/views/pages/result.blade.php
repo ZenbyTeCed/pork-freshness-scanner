@@ -1,11 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Prepare result display values --}}
 @php
     $isEsp32 = $result['source'] === 'esp32';
     $resultClass = $result['prediction_class'] ?: 'unknown';
 @endphp
 
+{{-- Analysis result page --}}
 <div class="result-page">
     <div class="result-container">
         <a href="{{ route('history') }}" class="result-back-link">
@@ -20,6 +22,7 @@
             <p>{{ $result['source_label'] }} &middot; {{ $result['analysis_type'] }}</p>
         </div>
 
+        {{-- Result details grid --}}
         <div class="result-grid">
             <div class="result-left">
                 @unless ($isEsp32)
@@ -213,6 +216,7 @@
     </div>
 </div>
 <script>
+    // Requests an AI insight for this scan result.
     document.addEventListener('DOMContentLoaded', async () => {
         const insightText = document.getElementById('aiInsightText');
         const insightNote = document.getElementById('aiInsightNote');
