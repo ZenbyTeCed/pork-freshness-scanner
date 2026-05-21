@@ -3,6 +3,8 @@
 ## 📌 Description
 PORKY is an AI-based pork freshness grading system that uses an ESP32-CAM and edge machine learning to analyze pork images and classify freshness based on visible characteristics.
 
+https://porky-1smm.onrender.com/
+
 This system focuses on **visual grading only** and does not replace laboratory-based freshness testing.
 
 ---
